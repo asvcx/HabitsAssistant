@@ -1,19 +1,19 @@
 package habitsapp;
 
-import habitsapp.console.UIService;
+import habitsapp.console.Menu;
 import habitsapp.data.DataController;
 import habitsapp.models.User;
 
 public class Main {
 
     public static void main(String[] args) {
-        User user = new User();
-        user.setName("test");
-        user.setEmail("test@mail.ru");
-        user.setPassword("121212");
-        DataController.addUser(user);
+        User testUser = new User("user", "user@mail.ru", "userPsw");
+        User testAdmin = new User("admin", "admin@mail.ru", "adminPsw");
+        testAdmin.setAccessLevel(User.AccessLevel.ADMIN);
+        DataController.addUser(testUser);
+        DataController.addUser(testAdmin);
 
-        UIService.startGuest();
+        Menu.startGuestMenu();
     }
 
 }

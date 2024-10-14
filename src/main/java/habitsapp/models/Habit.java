@@ -1,8 +1,5 @@
 package habitsapp.models;
 
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.time.Instant;
@@ -15,7 +12,6 @@ public class Habit implements Comparable<Habit>, Cloneable {
     private int period;
     private final Instant startedDate;
     private TreeSet<Instant> completionDate;
-    private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd MM yy");
 
     public Habit() {
         completionDate = new TreeSet<>();
@@ -68,11 +64,7 @@ public class Habit implements Comparable<Habit>, Cloneable {
     }
 
     public void setPeriod(int period) {
-        if (period > 0) {
-            this.period = period;
-        } else {
-            this.period = 0;
-        }
+        this.period = Math.max(period, 1);
     }
 
     public String getTitle() {
@@ -92,14 +84,14 @@ public class Habit implements Comparable<Habit>, Cloneable {
     }
 
     public TreeSet<Instant> getCompletionDate() {
-        return new TreeSet<Instant>(this.completionDate);
+        return new TreeSet<>(this.completionDate);
     }
 
     public int getCompletionPercent() {
         Instant currentDate = Instant.now();
         int daysAfterCreate = (int) ChronoUnit.DAYS.between(startedDate, currentDate);
         int completedCount = completionDate.size();
-        int maxCount = Math.max(daysAfterCreate, 1) / period;
+        int maxCount = 1 + daysAfterCreate / period;
         return (completedCount * 100) / maxCount;
     }
 

@@ -3,10 +3,17 @@ package habitsapp.data;
 import habitsapp.models.Habit;
 import habitsapp.models.User;
 import java.util.*;
+import java.util.stream.IntStream;
 
 public class DataController {
-    private static HashMap<User, TreeSet<Habit>> habitsOfUser = new HashMap<>();
-    private static HashMap<String,User> userByEmail = new HashMap<>();
+    public enum ProfileAction {
+        BLOCK,
+        UNBLOCK,
+        DELETE
+    }
+
+    private static final HashMap<User, TreeSet<Habit>> habitsOfUser = new HashMap<>();
+    private static final HashMap<String,User> userByEmail = new HashMap<>();
 
     public static boolean addUser(User user) {
         if (!userByEmail.containsKey(user.getEmail().toLowerCase())) {
@@ -38,7 +45,8 @@ public class DataController {
         if (!userByEmail.containsKey(email.toLowerCase())) {
             return null;
         }
-        if (userByEmail.get(email.toLowerCase()).isPasswordValid(password)) {
+        User user = userByEmail.get(email.toLowerCase());
+        if (user.isPasswordProper(password) && !user.isBlocked()) {
             return userByEmail.get(email.toLowerCase()).clone();
         }
         return null;
@@ -87,16 +95,26 @@ public class DataController {
         if (!userByEmail.containsKey(email.toLowerCase())) {
             return false;
         }
-        User user = userByEmail.get(email.toLowerCase());
-        user.setName(changedUser.getName());
-        user.setEmail(changedUser.getEmail());
+        User existingUser = userByEmail.get(email.toLowerCase());
+        if (existingUser.getName().equals(changedUser.getName())
+                && existingUser.getEmail().equals(changedUser.getEmail().toLowerCase())) {
+            return false;
+        }
+        userByEmail.remove(existingUser.getEmail());
+        existingUser.setName(changedUser.getName());
+        existingUser.setEmail(changedUser.getEmail().toLowerCase());
+        userByEmail.put(changedUser.getEmail().toLowerCase(), existingUser);
         return true;
     }
 
     public static boolean editUserPassword(String email, String oldPassword, String newPassword) {
         User user = userByEmail.get(email.toLowerCase());
-        if (user.isPasswordValid(oldPassword)) {
+        //LinkedHashSet;
+        TreeSet<Habit> userHabits = habitsOfUser.get(user);
+        if (user.isPasswordProper(oldPassword)) {
+            habitsOfUser.remove(user);
             user.setPassword(newPassword);
+            habitsOfUser.put(user, userHabits);
             return true;
         } else {
             return false;
@@ -108,7 +126,7 @@ public class DataController {
             return false;
         }
         User user = userByEmail.get(email.toLowerCase());
-        if (user.isPasswordValid(userPassword)) {
+        if (user.isPasswordProper(userPassword)) {
             habitsOfUser.remove(user);
             userByEmail.remove(email.toLowerCase());
             return true;
@@ -121,6 +139,52 @@ public class DataController {
         User user = userByEmail.get(email.toLowerCase());
         Set<Habit> userHabits = habitsOfUser.get(user);
         userHabits.remove(habit);
+    }
+
+    public static List<String> getProfilesList(User admin) {
+        if (!userByEmail.containsKey(admin.getEmail())) {
+            return new LinkedList<>();
+        }
+        User authenticUser = userByEmail.get(admin.getEmail());
+        if (authenticUser.isAdmin() && authenticUser.isUserAuthentic(admin)) {
+            Set<User> userSet = habitsOfUser.keySet();
+            return IntStream.range(0, userSet.size())
+                    .mapToObj(i -> (i + 1) + ". " + userSet.stream().toList().get(i))
+                    .toList();
+        }
+        return new LinkedList<>();
+    }
+
+    public static boolean manageUserProfile(User admin, String emailToManage, ProfileAction profileAction) {
+        if (!userByEmail.containsKey(admin.getEmail()) || !userByEmail.containsKey(emailToManage)) {
+            return false;
+        }
+        User authenticUser = userByEmail.get(admin.getEmail());
+        if (authenticUser.isAdmin() && authenticUser.isUserAuthentic(admin)) {
+            User user = userByEmail.get(emailToManage);
+            switch (profileAction) {
+                case ProfileAction.BLOCK: {
+                    if (!user.isBlocked()) {
+                        user.block();
+                        return true;
+                    }
+                    return false;
+                }
+                case ProfileAction.UNBLOCK: {
+                    if (user.isBlocked()) {
+                        user.unblock();
+                        return true;
+                    }
+                    return false;
+                }
+                case ProfileAction.DELETE: {
+                    habitsOfUser.remove(user);
+                    userByEmail.remove(emailToManage);
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
 
