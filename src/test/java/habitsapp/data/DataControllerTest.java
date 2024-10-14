@@ -80,11 +80,11 @@ public class DataControllerTest {
         assertThat(DataController.userExists(existingUser.getEmail())).isEqualTo(true);
         assertThat(DataController.userExists(changedUser.getEmail())).isEqualTo(false);
 
-        DataController.editUserData(existingUser.getEmail(), changedUser);
+        DataController.editUserData(existingUser.getEmail(), changedUser, "ExistingPass");
         assertThat(DataController.userExists(existingUser.getEmail())).isEqualTo(false);
         assertThat(DataController.userExists(changedUser.getEmail())).isEqualTo(true);
 
-        DataController.editUserData(changedUser.getEmail(), existingUser);
+        DataController.editUserData(changedUser.getEmail(), existingUser, "ExistingPass");
         assertThat(DataController.userExists(existingUser.getEmail())).isEqualTo(true);
         assertThat(DataController.userExists(changedUser.getEmail())).isEqualTo(false);
     }

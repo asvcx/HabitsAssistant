@@ -51,12 +51,10 @@ public class Habit implements Comparable<Habit>, Cloneable {
         return String.format("%s [период: %d, описание: %s]", this.title, this.period, this.description);
     }
 
-    public boolean setTitle(String title) {
-        if (!Objects.equals(title, "")) {
+    public void setTitle(String title) {
+        if (title != null && !Objects.equals(title, "")) {
             this.title = title;
-            return true;
         }
-        return false;
     }
 
     public void setDescription(String description) {
@@ -69,10 +67,6 @@ public class Habit implements Comparable<Habit>, Cloneable {
 
     public String getTitle() {
         return this.title;
-    }
-
-    public String getDescription() {
-        return this.description;
     }
 
     public int getPeriod() {

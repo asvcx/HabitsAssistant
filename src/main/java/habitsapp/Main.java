@@ -7,8 +7,8 @@ import habitsapp.models.User;
 public class Main {
 
     public static void main(String[] args) {
-        User testUser = new User("user", "user@mail.ru", "userPsw");
-        User testAdmin = new User("admin", "admin@mail.ru", "adminPsw");
+        User testUser = new User("user", "user@mail.ru", "UserPsw");
+        User testAdmin = new User("admin", "admin@mail.ru", "AdminPsw");
         testAdmin.setAccessLevel(User.AccessLevel.ADMIN);
         DataController.addUser(testUser);
         DataController.addUser(testAdmin);

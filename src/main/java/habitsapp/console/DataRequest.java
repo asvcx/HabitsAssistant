@@ -14,17 +14,16 @@ public class DataRequest {
 
     public static void userAuthorization() {
         System.out.println("Введите электронную почту");
-        String email = scan.nextLine();
+        String email = currentScanner.nextLine();
         if (!DataController.userExists(email)) {
             System.out.printf("Пользователь с указанным email не найден (%s)%n", email);
             return;
         }
         System.out.println("Введите пароль");
-        String password = scan.nextLine();
+        String password = currentScanner.nextLine();
         User tempUser = DataController.userAuth(email, password);
         if (tempUser != null) {
-            Session.setCurrentProfile(tempUser);
-            Session.setCurrentHabits(DataController.getHabits(Session.getCurrentEmail()));
+            Session.start(tempUser);
             System.out.printf("Вы вошли как %s%n", Session.getCurrentName());
         } else {
             System.out.println("Не удалось войти в аккаунт");
@@ -62,48 +61,19 @@ public class DataRequest {
         }
     }
 
-    public static TreeSet<Habit> getHabits() {
-        return DataController.getHabits(Session.getCurrentEmail());
-    }
-
     public static List<String> getProfilesList() {
         return DataController.getProfilesList(Session.getCurrentProfile());
     }
 
-    public static boolean removeUserProfile() {
-        System.out.println("Введите электронную почту пользователя, которого требуется удалить.");
-        String emailToRemove = scan.nextLine();
-        boolean success = DataController.manageUserProfile(Session.getCurrentProfile(), emailToRemove, DataController.ProfileAction.DELETE);
+    public static void operateProfile(String actionWord, DataController.ProfileAction action) {
+        System.out.printf("Введите электронную почту пользователя, которого требуется %s.%n", actionWord);
+        String emailToRemove = currentScanner.nextLine();
+        boolean success = DataController.manageUserProfile(Session.getCurrentProfile(), emailToRemove, action);
         if (success) {
-            System.out.printf("Пользователь успешно удален (%s).%n", emailToRemove);
+            System.out.printf("Действие выполнено успешно (%s пользователя %s) ().%n", actionWord, emailToRemove);
         } else {
-            System.out.println("Не удалось удалить пользователя.");
+            System.out.printf("Не удалось %s пользователя.%n", actionWord);
         }
-        return success;
-    }
-
-    public static boolean blockUserProfile() {
-        System.out.println("Введите электронную почту пользователя, которого требуется заблокировать.");
-        String emailToRemove = scan.nextLine();
-        boolean success = DataController.manageUserProfile(Session.getCurrentProfile(), emailToRemove, DataController.ProfileAction.BLOCK);
-        if (success) {
-            System.out.printf("Пользователь успешно заблокирован (%s).%n", emailToRemove);
-        } else {
-            System.out.println("Не удалось заблокировать пользователя.");
-        }
-        return success;
-    }
-
-    public static boolean unblockUserProfile() {
-        System.out.println("Введите электронную почту пользователя, которого требуется разблокировать.");
-        String emailToRemove = scan.nextLine();
-        boolean success = DataController.manageUserProfile(Session.getCurrentProfile(), emailToRemove, DataController.ProfileAction.UNBLOCK);
-        if (success) {
-            System.out.printf("Пользователь успешно разблокирован (%s).%n", emailToRemove);
-        } else {
-            System.out.println("Не удалось разблокировать пользователя.");
-        }
-        return success;
     }
 
     public static void createHabit() {
@@ -159,7 +129,7 @@ public class DataRequest {
         System.out.println("Что вы хотите изменить");
         Arrays.stream(editOptions).forEach(System.out::println);
 
-        switch(scan.nextLine()) {
+        switch(currentScanner.nextLine()) {
             case "1" : {
                 stringInput("Введите новое название",
                         s -> !s.isEmpty(),
@@ -169,13 +139,13 @@ public class DataRequest {
             }
             case "2" : {
                 System.out.println("Введите новое описание привычки");
-                tempHabit.setDescription(scan.nextLine());
+                tempHabit.setDescription(currentScanner.nextLine());
                 break;
             }
             case "3" : {
                 int period = intInput("Введите частоту в сутках", 1, 365);
                 tempHabit.setPeriod(period);
-                tempHabit.setPeriod(scan.nextInt());
+                tempHabit.setPeriod(currentScanner.nextInt());
                 break;
             }
             default : {
@@ -207,16 +177,19 @@ public class DataRequest {
                 "3. Пароль",
                 "0. Назад"
         };
+        String password = "";
         System.out.println("Что вы хотите изменить");
         Arrays.stream(editOptions).forEach(System.out::println);
         boolean success = false;
-        switch(scan.nextLine()) {
+        switch(currentScanner.nextLine()) {
             case "1" : {
                 stringInput("Введите новое имя",
                         s -> s.length() > 3,
                         tempUser::setName,
                         "Имя должно содержать не менее 4 символов");
-                success = DataController.editUserData(Session.getCurrentEmail(), tempUser);
+                System.out.println("Введите пароль");
+                password = currentScanner.nextLine();
+                success = DataController.editUserData(Session.getCurrentEmail(), tempUser, password);
                 break;
             }
             case "2" : {
@@ -224,12 +197,14 @@ public class DataRequest {
                         Input::isValidEmail,
                         tempUser::setEmail,
                         "Неверный формат почты");
-                success = DataController.editUserData(Session.getCurrentEmail(), tempUser);
+                System.out.println("Введите пароль");
+                password = currentScanner.nextLine();
+                success = DataController.editUserData(Session.getCurrentEmail(), tempUser, password);
                 break;
             }
             case "3" : {
                 System.out.println("Введите старый пароль");
-                String oldPassword = scan.nextLine();
+                String oldPassword = currentScanner.nextLine();
                 String newPassword = stringInput("Введите новый пароль",
                         s -> s.length() > 5,
                         _ -> {},
@@ -246,6 +221,9 @@ public class DataRequest {
             }
         }
         if (success) {
+            User user = DataController.userAuth(tempUser.getEmail(), password);
+            Session.start(user);
+            Session.update();
             System.out.println("Данные успешно изменены");
         } else {
             System.out.println("Не удалось изменить данные");
@@ -258,7 +236,7 @@ public class DataRequest {
 
     public static void deleteUserProfile() {
         System.out.println("Введите пароль, чтобы удалить профиль.");
-        String password = scan.nextLine();
+        String password = currentScanner.nextLine();
         boolean success = DataController.deleteUserProfile(Session.getCurrentEmail(), password);
         if (success) {
             System.out.println("Профиль успешно удален.");

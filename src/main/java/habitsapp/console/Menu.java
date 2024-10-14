@@ -1,5 +1,6 @@
 package habitsapp.console;
 
+import habitsapp.data.DataController;
 import habitsapp.models.Habit;
 import habitsapp.session.Session;
 
@@ -18,7 +19,7 @@ public class Menu {
         while (continueCondition.get()) {
             System.out.println("Выберите действие:");
             options.forEach((msg, _) -> System.out.println(msg));
-            String choice = scan.nextLine();
+            String choice = currentScanner.nextLine();
             if (choice.equals("0")) {
                 return;
             }
@@ -81,7 +82,7 @@ public class Menu {
         options.put("0. Назад", () -> {});
 
         Supplier<Boolean> continueCondition = Session::isAuthorized;
-        displayMenu(options, continueCondition, () -> Session.setCurrentHabits(DataRequest.getHabits()));
+        displayMenu(options, continueCondition, Session::update);
     }
 
     private static void startUserProfileMenu() {
@@ -159,9 +160,12 @@ public class Menu {
         System.out.println("Администрирование пользователей");
         Map<String, Runnable> options = new LinkedHashMap<>();
         options.put("1. Вывести список пользователей", () -> DataRequest.getProfilesList().forEach(System.out::println));
-        options.put("2. Заблокировать пользователя", DataRequest::blockUserProfile);
-        options.put("3. Разблокировать пользователя", DataRequest::unblockUserProfile);
-        options.put("4. Удалить пользователя", DataRequest::removeUserProfile);
+        options.put("2. Заблокировать пользователя",
+                () -> DataRequest.operateProfile("заблокировать", DataController.ProfileAction.BLOCK));
+        options.put("3. Разблокировать пользователя",
+                () -> DataRequest.operateProfile("разблокировать", DataController.ProfileAction.UNBLOCK));
+        options.put("4. Удалить пользователя",
+                () -> DataRequest.operateProfile("удалить", DataController.ProfileAction.DELETE));
         options.put("0. Назад", () -> {});
         Supplier<Boolean> continueCondition = Session::isAuthorized;
         displayMenu(options, continueCondition, () -> {});

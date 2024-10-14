@@ -1,5 +1,6 @@
 package habitsapp.session;
 
+import habitsapp.data.DataController;
 import habitsapp.models.Habit;
 import habitsapp.models.User;
 
@@ -10,6 +11,17 @@ public class Session {
 
     private static User currentProfile = null;
     private static Set<Habit> currentHabits = new TreeSet<>();
+
+    public static void start(User user) {
+        if (user != null) {
+            setCurrentProfile(user);
+            setCurrentHabits(DataController.getHabits(getCurrentEmail()));
+        }
+    }
+
+    public static void update() {
+        setCurrentHabits(DataController.getHabits(getCurrentEmail()));
+    }
 
     public static void setCurrentProfile(User user) {
         currentProfile = user;

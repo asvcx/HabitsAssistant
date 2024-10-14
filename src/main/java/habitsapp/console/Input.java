@@ -4,6 +4,7 @@ import habitsapp.models.Habit;
 import habitsapp.session.Session;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -12,36 +13,53 @@ import java.util.Optional;
 import java.util.Scanner;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.regex.Pattern;
 
 public class Input {
 
-    public static final Scanner scan = new Scanner(System.in);
+    private static final Scanner mainScanner = new Scanner(System.in);
+    public static Scanner currentScanner = mainScanner;
+
+    public static void setCurrentScanner(Scanner scanner) {
+        currentScanner = scanner;
+    }
+
+    public static void resetCurrentScanner() {
+        currentScanner = mainScanner;
+    }
 
     public static boolean isValidDate(String dateString) {
-        String regex = "^\\d{1,2}-\\d{1,2}-\\d{2}$";
-        Pattern pattern = Pattern.compile(regex);
-        return pattern.matcher(dateString).matches();
+        return dateString.matches("^\\d{1,2}-\\d{1,2}-\\d{2}$");
+
     }
 
     public static boolean isValidEmail(String email) {
-        return email.matches("^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$");
+        return email.matches("^[\\w-]+(\\.[\\w-]+)*@[\\w-]+(\\.[\\w-]{2,})+$");
     }
 
     public static int intInput(String inputMsg, int min, int max) {
         System.out.println(inputMsg);
-        while (!scan.hasNextInt()) {
-            System.out.printf("Неверный ввод. Введите целое число в диапазоне %d - %d%n", min, max);
-            scan.nextLine();
+        int result;
+        while (true) {
+            if (!currentScanner.hasNextInt()) {
+                System.out.printf("Неверный ввод. Введите целое число в диапазоне %d - %d%n", min, max);
+                currentScanner.nextLine();
+                continue;
+            }
+            result = currentScanner.nextInt();
+            currentScanner.nextLine();
+
+            if (result < min || result > max) {
+                System.out.printf("Неверный ввод. Введите целое число в диапазоне %d - %d%n", min, max);
+            } else {
+                break;
+            }
         }
-        int result = scan.nextInt();
-        scan.nextLine();
         return result;
     }
 
     public static String stringInput(String inputMsg, Predicate<String> condition, Consumer<String> action, String failMsg) {
         System.out.println(inputMsg);
-        String input = scan.nextLine();
+        String input = currentScanner.nextLine();
         if (condition.test(input)) {
             action.accept(input);
             return input;
@@ -62,8 +80,8 @@ public class Input {
         }
         ZonedDateTime zonedDateTime;
         try {
-            DateTimeFormatter utcFormatter = DateTimeFormatter.ofPattern("HH:mm, d-M-uu z", Locale.US);
-            zonedDateTime = ZonedDateTime.parse("12:00, " + dateInput + " UTC", utcFormatter);
+            DateTimeFormatter utcFormatter = DateTimeFormatter.ofPattern("HH:mm, d-M-uu z");
+            zonedDateTime = ZonedDateTime.parse("12:00, " + dateInput + " GMT", utcFormatter);
         } catch (DateTimeParseException e) {
             System.out.println("Некорректная дата");
             return null;
@@ -73,7 +91,7 @@ public class Input {
 
     public static Optional<Habit> selectHabit() {
         System.out.println("Введите название привычки");
-        String habitTitle = scan.nextLine();
+        String habitTitle = currentScanner.nextLine();
         Optional<Habit> habit = Session.getCurrentHabits().stream()
                 .filter(h -> h.getTitle().equals(habitTitle))
                 .findFirst();

@@ -74,7 +74,7 @@ public class DataController {
         }
         Habit ceil = habits.ceiling(habit);
         Habit floor = habits.floor(habit);
-        if (!ceil.equals(floor)) {
+        if (ceil == null || !ceil.equals(floor)) {
             return false;
         }
         return ceil.markAsCompleted();
@@ -91,11 +91,14 @@ public class DataController {
         return true;
     }
 
-    public static boolean editUserData(String email, User changedUser) {
+    public static boolean editUserData(String email, User changedUser, String password) {
         if (!userByEmail.containsKey(email.toLowerCase())) {
             return false;
         }
         User existingUser = userByEmail.get(email.toLowerCase());
+        if (!existingUser.isPasswordProper(password)) {
+            return false;
+        }
         if (existingUser.getName().equals(changedUser.getName())
                 && existingUser.getEmail().equals(changedUser.getEmail().toLowerCase())) {
             return false;
