@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd"
+        logicalFilePath="db/changelog.xml">
+
+        <changeSet id="002-create-table" author="asvcx">
+
+            <createTable tableName="users" schemaName="habits_model_schema">
+                <column name="UserID" type="BIGINT">
+                    <constraints primaryKey="true" nullable="false"/>
+                </column>
+                <column name="UserName" type="VARCHAR(255)"/>
+                <column name="Password" type="VARCHAR(255)"/>
+                <column name="Email" type="VARCHAR(255)">
+                    <constraints unique="true" nullable="false"/>
+                </column>
+                <column name="Blocked" type="BOOLEAN"/>
+                <column name="AccessLevel" type="habits_model_schema.access_level"/>
+            </createTable>
+
+            <createTable tableName="habits" schemaName="habits_model_schema">
+                <column name="HabitID" type="BIGINT">
+                    <constraints primaryKey="true" nullable="false"/>
+                </column>
+                <column name="UserEmail" type="VARCHAR(255)">
+                    <constraints nullable="false"/>
+                </column>
+                <column name="Title" type="VARCHAR(255)">
+                    <constraints nullable="false"/>
+                </column>
+                <column name="Description" type="VARCHAR(255)"/>
+                <column name="Period" type="INT">
+                    <constraints nullable="false"/>
+                </column>
+                <column name="StartDate" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            </createTable>
+
+            <createTable tableName="completion_dates" schemaName="habits_model_schema">
+                <column name="UserEmail" type="VARCHAR(255)">
+                    <constraints nullable="false"/>
+                </column>
+                <column name="Title" type="VARCHAR(255)">
+                    <constraints nullable="false"/>
+                </column>
+                <column name="CompletionDate" type="TIMESTAMP WITHOUT TIME ZONE">
+                    <constraints nullable="false"/>
+                </column>
+            </createTable>
+
+            <addPrimaryKey
+                    constraintName="pk_completion_dates"
+                    schemaName="habits_model_schema"
+                    tableName="completion_dates"
+                    columnNames="UserEmail,Title,CompletionDate"
+            />
+
+            <addUniqueConstraint
+                    constraintName="uq_habits_Email_Title"
+                    tableName="habits"
+                    columnNames="UserEmail, Title"
+                    schemaName="habits_model_schema"/>
+
+            <addForeignKeyConstraint
+                    constraintName="fk_habits_UserEmail"
+                    referencedTableSchemaName="habits_model_schema"
+                    baseTableSchemaName="habits_model_schema"
+                    baseTableName="habits"
+                    baseColumnNames="UserEmail"
+                    referencedTableName="users"
+                    referencedColumnNames="Email"
+                    onUpdate="CASCADE"
+                    onDelete="CASCADE"
+            />
+
+            <addForeignKeyConstraint
+                    constraintName="fk_completion_dates_HabitID"
+                    referencedTableSchemaName="habits_model_schema"
+                    baseTableSchemaName="habits_model_schema"
+                    baseTableName="completion_dates"
+                    baseColumnNames="Title,UserEmail"
+                    referencedTableName="habits"
+                    referencedColumnNames="Title,UserEmail"
+                    onUpdate="CASCADE"
+                    onDelete="CASCADE"
+            />
+
+        </changeSet>
+
+</databaseChangeLog>

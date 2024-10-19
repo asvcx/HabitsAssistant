@@ -7,15 +7,25 @@ public class User implements Cloneable {
         ADMIN
     }
 
+    public enum AccountStatus {
+        STABLE,
+        CREATED,
+        UPDATED,
+        DELETED
+    }
+
+    private int id;
     private String name;
     private String email;
     private String password;
-    private AccessLevel accessLevel;
     private boolean blocked;
+    private AccessLevel accessLevel;
+    private AccountStatus accountStatus;
 
     public User() {
-        setAccessLevel(AccessLevel.USER);
         blocked = false;
+        setAccessLevel(AccessLevel.USER);
+        accountStatus = AccountStatus.STABLE;
     }
 
     public User(String name, String email, String password) {
@@ -25,15 +35,21 @@ public class User implements Cloneable {
         setPassword(password);
     }
 
+    public User(int id, String name, String email, String password, AccessLevel accessLevel, boolean blocked) {
+        this(name, email, password);
+        this.id = id;
+        this.accessLevel = accessLevel;
+        this.blocked = blocked;
+    }
+
+    public int getID() {
+        return this.id;
+    }
+
     @Override
     public String toString() {
         return String.format("%s, [доступ: %s] [заблокированный: %b]", this.email, this.accessLevel, this.blocked);
     }
-
-    private String encodePsw(String psw) {
-        return psw;
-    }
-
     public void setName(String name) {
         this.name = name;
     }
@@ -51,7 +67,7 @@ public class User implements Cloneable {
     }
 
     public void setPassword(String password) {
-        this.password = encodePsw(password);
+        this.password = password;
     }
 
     public void setAccessLevel(AccessLevel acl) {
@@ -66,6 +82,14 @@ public class User implements Cloneable {
         return this.email;
     }
 
+    public AccessLevel getAccessLevel() {
+        return this.accessLevel;
+    }
+
+    public String getPassword() {
+        return this.password;
+    }
+
     public boolean isAdmin() {
         return (accessLevel == AccessLevel.ADMIN);
     }
@@ -74,8 +98,16 @@ public class User implements Cloneable {
         return this.blocked;
     }
 
-    public boolean isPasswordProper(String psw) {
-        return this.password.equals(encodePsw(psw));
+    public void setAccountStatus(AccountStatus accSt) {
+        this.accountStatus = accSt;
+    }
+
+    public AccountStatus getAccountStatus() {
+        return this.accountStatus;
+    }
+
+    public boolean comparePassword(String password) {
+        return this.password.equals(password);
     }
 
     public boolean isUserAuthentic(User user) {

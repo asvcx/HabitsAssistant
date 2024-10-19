@@ -1,6 +1,7 @@
-package habitsapp.console;
+package habitsapp.in;
 
-import habitsapp.data.DataController;
+import habitsapp.repository.AccountRepository;
+import habitsapp.repository.DataLoader;
 import habitsapp.models.Habit;
 import habitsapp.models.User;
 import habitsapp.session.Session;
@@ -9,32 +10,37 @@ import org.mockito.Mockito;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.Scanner;
 
-import static habitsapp.console.Input.*;
+import static habitsapp.in.InputDataByConsole.*;
+import static habitsapp.repository.DataLoader.accountRepository;
+import static habitsapp.repository.DataLoader.inputData;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class InputTest {
 
     @Test
     void shouldInputStringWhenConditionSatisfied() {
+        accountRepository = new AccountRepository();
+        inputData = new InputDataByConsole();
         Scanner mockScanner = Mockito.mock(Scanner.class);
         Mockito.when(mockScanner.nextLine())
                 .thenReturn("valid")
                 .thenReturn("not valid");
-        setCurrentScanner(mockScanner);
+        ((InputDataByConsole) DataLoader.inputData).setCurrentScanner(mockScanner);
 
-        String s1 = stringInput("",
+        Optional<String> s1 = DataLoader.inputData.stringInput("",
                 s -> s.startsWith("valid"),
                 (_) -> {},
                 "");
-        String s2 = stringInput("",
+        Optional<String> s2 = DataLoader.inputData.stringInput("",
                 s -> s.startsWith("valid"),
                 (_) -> {},
                 "");
-        assertThat(s1.isEmpty()).isEqualTo(false);
-        assertThat(s2.isEmpty()).isEqualTo(true);
-        resetCurrentScanner();
+        assertThat(s1.isPresent()).isEqualTo(true);
+        assertThat(s2.isPresent()).isEqualTo(false);
+        ((InputDataByConsole) DataLoader.inputData).resetCurrentScanner();
     }
 
     @Test
@@ -69,40 +75,45 @@ public class InputTest {
 
     @Test
     void shouldSelectHabit() {
+        accountRepository = new AccountRepository();
+        inputData = new InputDataByConsole();
         Habit habit = new Habit("HabitTitle", "HabitDescription", 1);
         User user = new User("Name", "name@mail.ru", "UserPass");
-        DataController.addUser(user);
+        accountRepository.loadUser(user);
         Session.setCurrentProfile(user);
-        DataController.addHabit(user.getEmail(), habit);
+        accountRepository.loadHabit(user.getEmail(), habit);
         Session.update();
 
         Scanner mockScanner = Mockito.mock(Scanner.class);
         Mockito.when(mockScanner.nextLine())
                 .thenReturn("HabitTitle");
-        setCurrentScanner(mockScanner);
-        assertThat(selectHabit().isPresent()).isEqualTo(true);
+        ((InputDataByConsole) DataLoader.inputData).setCurrentScanner(mockScanner);
+        assertThat(DataLoader.inputData.selectHabit().isPresent()).isEqualTo(true);
 
-        DataController.deleteHabit(user.getEmail(), habit);
+        accountRepository.deleteHabit(user.getEmail(), habit);
         Session.exitFromProfile();
-        DataController.deleteUserProfile("admin@google.com", "AdminPass");
-        resetCurrentScanner();
+        accountRepository.deleteOwnAccount("admin@google.com", "AdminPass");
+        ((InputDataByConsole) DataLoader.inputData).resetCurrentScanner();
     }
 
     @Test
     void shouldInputDateTimeAndReturnInstant() {
+        accountRepository = new AccountRepository();
+        inputData = new InputDataByConsole();
         Scanner mockScanner = Mockito.mock(Scanner.class);
         Mockito.when(mockScanner.nextLine())
-                .thenReturn("14-7-97")
-                .thenReturn("15-7-97")
-                .thenReturn("31-05-99");
-        setCurrentScanner(mockScanner);
-        Instant t1 = dateTimeInput();
-        Instant t2 = dateTimeInput();
-        Instant t3 = dateTimeInput();
+                .thenReturn("14-07-97")
+                .thenReturn("15-07-97")
+                .thenReturn("29-05-99");
+        ((InputDataByConsole) DataLoader.inputData).setCurrentScanner(mockScanner);
+        Optional<Instant> t1 = DataLoader.inputData.dateTimeInput("Введите дату создания в виде дд-мм-гг.");
+        Optional<Instant> t2 = DataLoader.inputData.dateTimeInput("Введите дату создания в виде дд-мм-гг.");
+        Optional<Instant> t3 = DataLoader.inputData.dateTimeInput("Введите дату создания в виде дд-мм-гг.");
 
-        assertThat(Duration.between(t1, t2).toHours()).isBetween(23L, 25L);
-        assertThat(Duration.between(t2, t3).toDays()).isBetween(365L, 365*2L);
-        resetCurrentScanner();
+        assertThat (t1.isPresent() || t2.isPresent() || t3.isPresent()).isEqualTo(true);
+        assertThat(Duration.between(t1.orElseThrow(), t2.orElseThrow()).toHours()).isBetween(23L, 25L);
+        assertThat(Duration.between(t2.orElseThrow(), t3.orElseThrow()).toDays()).isBetween(365L, 365*2L);
+        ((InputDataByConsole) DataLoader.inputData).resetCurrentScanner();
     }
 
 }

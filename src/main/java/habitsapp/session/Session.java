@@ -1,26 +1,28 @@
 package habitsapp.session;
 
-import habitsapp.data.DataController;
 import habitsapp.models.Habit;
 import habitsapp.models.User;
 
 import java.util.Set;
 import java.util.TreeSet;
 
+import static habitsapp.repository.DataLoader.accountRepository;
+
 public class Session {
 
     private static User currentProfile = null;
     private static Set<Habit> currentHabits = new TreeSet<>();
+    private static String authKey;
 
     public static void start(User user) {
         if (user != null) {
             setCurrentProfile(user);
-            setCurrentHabits(DataController.getHabits(getCurrentEmail()));
+            setCurrentHabits(accountRepository.getHabitsList(getCurrentEmail()));
         }
     }
 
     public static void update() {
-        setCurrentHabits(DataController.getHabits(getCurrentEmail()));
+        setCurrentHabits(accountRepository.getHabitsList(getCurrentEmail()));
     }
 
     public static void setCurrentProfile(User user) {

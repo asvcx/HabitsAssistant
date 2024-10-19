@@ -1,19 +1,25 @@
 package habitsapp;
 
-import habitsapp.console.Menu;
-import habitsapp.data.DataController;
-import habitsapp.models.User;
+import habitsapp.migration.Migration;
+import habitsapp.out.MenuConsole;
+import habitsapp.repository.DataLoader;
 
 public class Main {
 
     public static void main(String[] args) {
-        User testUser = new User("user", "user@mail.ru", "UserPsw");
-        User testAdmin = new User("admin", "admin@mail.ru", "AdminPsw");
-        testAdmin.setAccessLevel(User.AccessLevel.ADMIN);
-        DataController.addUser(testUser);
-        DataController.addUser(testAdmin);
-
-        Menu.startGuestMenu();
+        Migration.migrate();
+        DataLoader.load();
+        String testAccountsMsg = """
+         ______________________________________________________________________________________
+         Test accounts:
+            1. Standard user. Name: "user"; Email: "user@mail.ru"; Password: "UserPassword".
+            2. Administrator. Name: "admin"; Email: "admin@mail.ru"; Password: "AdminPassword".
+         ______________________________________________________________________________________
+         """;
+        System.out.println(testAccountsMsg);
+        MenuConsole menuConsole = new MenuConsole();
+        menuConsole.startGuestMenu();
+        DataLoader.release();
     }
 
 }

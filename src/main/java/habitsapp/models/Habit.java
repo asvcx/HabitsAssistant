@@ -7,18 +7,21 @@ import java.util.TreeSet;
 
 public class Habit implements Comparable<Habit>, Cloneable {
 
+    private int id;
     private String title;
     private String description;
     private int period;
-    private final Instant startedDate;
-    private TreeSet<Instant> completionDate;
+    private Instant startedDate;
+    private TreeSet<Instant> completionDates;
+    private boolean updated;
 
     public Habit() {
-        completionDate = new TreeSet<>();
+        completionDates = new TreeSet<>();
         startedDate = Instant.now();
-        this.title = "";
-        this.description = "";
-        this.period = 1;
+        title = "";
+        description = "";
+        period = 1;
+        updated = false;
     }
 
     public Habit(String title, String description, int period) {
@@ -26,6 +29,12 @@ public class Habit implements Comparable<Habit>, Cloneable {
         setTitle(title);
         setDescription(description);
         setPeriod(period);
+    }
+
+    public Habit(int id, String title, String description, int period, Instant date) {
+        this(title, description, period);
+        this.id = id;
+        this.startedDate = date;
     }
 
     @Override
@@ -51,6 +60,14 @@ public class Habit implements Comparable<Habit>, Cloneable {
         return String.format("%s [период: %d, описание: %s]", this.title, this.period, this.description);
     }
 
+    public void setID(int id) {
+        this.id = id;
+    }
+
+    public int getID() {
+        return this.id;
+    }
+
     public void setTitle(String title) {
         if (title != null && !Objects.equals(title, "")) {
             this.title = title;
@@ -65,37 +82,53 @@ public class Habit implements Comparable<Habit>, Cloneable {
         this.period = Math.max(period, 1);
     }
 
+    public boolean isUpdated() {
+        return this.updated;
+    }
+
+    public void setUpdated() {
+        this.updated = true;
+    }
+
+    public void resetUpdated() {
+        this.updated = false;
+    }
+
     public String getTitle() {
         return this.title;
+    }
+
+    public String getDescription() {
+        return this.description;
     }
 
     public int getPeriod() {
         return this.period;
     }
 
-    public Instant getStartedDate() {
+    public Instant getStartDate() {
         return this.startedDate;
     }
 
-    public TreeSet<Instant> getCompletionDate() {
-        return new TreeSet<>(this.completionDate);
+    public TreeSet<Instant> getCompletionDates() {
+        return new TreeSet<>(this.completionDates);
     }
 
     public int getCompletionPercent() {
         Instant currentDate = Instant.now();
         int daysAfterCreate = (int) ChronoUnit.DAYS.between(startedDate, currentDate);
-        int completedCount = completionDate.size();
+        int completedCount = completionDates.size();
         int maxCount = 1 + daysAfterCreate / period;
         return (completedCount * 100) / maxCount;
     }
 
     public int getCurrentStreak() {
-        if (completionDate.isEmpty()) {
+        if (completionDates.isEmpty()) {
             return 0;
         }
         Instant currentDate = Instant.now();
         int streak = 0;
-        for (Instant completionDate : completionDate.descendingSet()) {
+        for (Instant completionDate : completionDates.descendingSet()) {
             long daysBetween = ChronoUnit.DAYS.between(completionDate, currentDate);
             if (daysBetween <= period) {
                 streak++;
@@ -109,25 +142,30 @@ public class Habit implements Comparable<Habit>, Cloneable {
 
     public boolean markAsCompleted() {
         Instant now = Instant.now();
-        if (completionDate.isEmpty()) {
-            completionDate.add(now);
+        if (completionDates.isEmpty()) {
+            completionDates.add(now);
             return true;
         }
-        Instant lastCompletionDate = completionDate.last();
+        Instant lastCompletionDate = completionDates.last();
         long daysSinceLastCompletion = ChronoUnit.DAYS.between(lastCompletionDate, now);
         if (daysSinceLastCompletion == period) {
-            completionDate.add(now);
+            completionDates.add(now);
             return true;
         } else {
             return false;
         }
     }
 
+    public boolean addCompletionDate(Instant date) {
+        completionDates.add(date);
+        return true;
+    }
+
     @Override
     public Habit clone() {
         try {
             Habit cloned = (Habit) super.clone();
-            cloned.completionDate = new TreeSet<>(this.completionDate);
+            cloned.completionDates = new TreeSet<>(this.completionDates);
             return cloned;
         } catch (CloneNotSupportedException e) {
             throw new AssertionError();
