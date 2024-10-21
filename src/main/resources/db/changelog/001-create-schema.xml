@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd"
+        logicalFilePath="db/changelog.xml">
+
+    <changeSet id="001-create-schema" author="asvcx">
+        <sql>CREATE SCHEMA IF NOT EXISTS habits_model_schema</sql>
+        <sql>CREATE SCHEMA IF NOT EXISTS habits_service_schema</sql>
+        <sql>CREATE TYPE habits_model_schema.access_level as ENUM ('USER', 'ADMIN')</sql>
+        <sql>CREATE SEQUENCE habits_model_schema.user_seq
+            START WITH 1
+            INCREMENT BY 1
+        </sql>
+        <sql>CREATE SEQUENCE habits_model_schema.habit_seq
+            START WITH 1
+            INCREMENT BY 1
+        </sql>
+    </changeSet>
+</databaseChangeLog>

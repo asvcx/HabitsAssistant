@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: HabitsAppPostgres
+    environment:
+      POSTGRES_USER: HabitsApp
+      POSTGRES_PASSWORD: bbRhP686PPaNPps3mPaNmA
+      POSTGRES_DB: HabitsAppDB
+    ports:
+      - "5471:5432"
+    volumes:
+      - data:/var/lib/postgresql/data
+
+volumes:
+  data:
