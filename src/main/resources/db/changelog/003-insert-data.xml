@@ -27,7 +27,7 @@
 
             <insert tableName="habits" schemaName="habits_model_schema">
                 <column name="HabitID" valueNumeric="nextval('habits_model_schema.habit_seq')"/>
-                <column name="UserEmail" value="user@mail.ru"/>
+                <column name="UserID" value="2"/>
                 <column name="Title" value="Running"/>
                 <column name="Description" value="For health"/>
                 <column name="Period" valueNumeric="1"/>

@@ -25,7 +25,7 @@
                 <column name="HabitID" type="BIGINT">
                     <constraints primaryKey="true" nullable="false"/>
                 </column>
-                <column name="UserEmail" type="VARCHAR(255)">
+                <column name="UserID" type="BIGINT">
                     <constraints nullable="false"/>
                 </column>
                 <column name="Title" type="VARCHAR(255)">
@@ -39,7 +39,7 @@
             </createTable>
 
             <createTable tableName="completion_dates" schemaName="habits_model_schema">
-                <column name="UserEmail" type="VARCHAR(255)">
+                <column name="UserID" type="BIGINT">
                     <constraints nullable="false"/>
                 </column>
                 <column name="Title" type="VARCHAR(255)">
@@ -54,23 +54,23 @@
                     constraintName="pk_completion_dates"
                     schemaName="habits_model_schema"
                     tableName="completion_dates"
-                    columnNames="UserEmail,Title,CompletionDate"
+                    columnNames="UserID,Title,CompletionDate"
             />
 
             <addUniqueConstraint
-                    constraintName="uq_habits_Email_Title"
+                    constraintName="uq_habits_UserID_Title"
                     tableName="habits"
-                    columnNames="UserEmail, Title"
+                    columnNames="UserID,Title"
                     schemaName="habits_model_schema"/>
 
             <addForeignKeyConstraint
-                    constraintName="fk_habits_UserEmail"
+                    constraintName="fk_habits_UserID"
                     referencedTableSchemaName="habits_model_schema"
                     baseTableSchemaName="habits_model_schema"
                     baseTableName="habits"
-                    baseColumnNames="UserEmail"
+                    baseColumnNames="UserID"
                     referencedTableName="users"
-                    referencedColumnNames="Email"
+                    referencedColumnNames="UserID"
                     onUpdate="CASCADE"
                     onDelete="CASCADE"
             />
@@ -80,9 +80,9 @@
                     referencedTableSchemaName="habits_model_schema"
                     baseTableSchemaName="habits_model_schema"
                     baseTableName="completion_dates"
-                    baseColumnNames="Title,UserEmail"
+                    baseColumnNames="Title,UserID"
                     referencedTableName="habits"
-                    referencedColumnNames="Title,UserEmail"
+                    referencedColumnNames="Title,UserID"
                     onUpdate="CASCADE"
                     onDelete="CASCADE"
             />

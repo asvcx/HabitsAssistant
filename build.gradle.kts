@@ -19,6 +19,8 @@ dependencies {
     testImplementation("org.testcontainers:postgresql:1.20.1")
     implementation("org.postgresql:postgresql:42.7.2")
     implementation("org.liquibase:liquibase-core:4.9.1")
+    implementation("org.slf4j:slf4j-api:2.0.13")
+    testImplementation("ch.qos.logback:logback-classic:1.5.6")
 }
 
 tasks.test {
