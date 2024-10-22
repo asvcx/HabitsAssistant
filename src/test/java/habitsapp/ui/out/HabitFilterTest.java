@@ -3,6 +3,7 @@ package habitsapp.ui.out;
 import habitsapp.data.models.Habit;
 import habitsapp.ui.session.Session;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import java.time.Instant;
 import java.util.Set;
@@ -27,6 +28,7 @@ public class HabitFilterTest {
     }
 
     @Test
+    @DisplayName("Should filter habits by title")
     void shouldFilterHabitsByName() {
         assertThat(HabitFilter.byName("Шитье").count()).isEqualTo(0);
         assertThat(HabitFilter.byName("Альпинизм").count()).isEqualTo(0);
@@ -35,6 +37,7 @@ public class HabitFilterTest {
     }
 
     @Test
+    @DisplayName("Should filter habits by period")
     void shouldFilterHabitsByPeriod() {
         assertThat(HabitFilter.byPeriod(1).count()).isEqualTo(1);
         assertThat(HabitFilter.byPeriod(2).count()).isEqualTo(2);
@@ -43,6 +46,7 @@ public class HabitFilterTest {
     }
 
     @Test
+    @DisplayName("Should filter habits correctly by date of creation")
     void shouldFilterHabitsByDateCreation() {
         // Given
         Instant dayNoHabitsAdded = Instant.parse("2020-04-05T12:00:00Z");
@@ -61,11 +65,13 @@ public class HabitFilterTest {
     }
 
     @Test
+    @DisplayName("Should filter habits by completion percent")
     void shouldFilterHabitsByCompletionPercent() {
         assertThat(HabitFilter.byCompletionPercent(0, 0).count()).isEqualTo(6);
     }
 
     @Test
+    @DisplayName("Should filter habits by current streak")
     void shouldFilterHabitsByCurrentStreak() {
         assertThat(HabitFilter.byCurrentStreak(0, 0).count()).isEqualTo(6);
     }

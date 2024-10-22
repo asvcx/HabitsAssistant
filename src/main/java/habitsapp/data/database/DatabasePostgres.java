@@ -92,8 +92,6 @@ public class DatabasePostgres implements Database {
             pStatement.setString(2, habit.getTitle());
             try (ResultSet resultSet = pStatement.executeQuery()) {
                 while(resultSet.next()) {
-                    String email = resultSet.getString("UserEmail");
-                    String title = resultSet.getString("Title");
                     Instant date = resultSet.getTimestamp("CompletionDate").toInstant();
                     habit.addCompletionDate(date);
                 }

@@ -1,10 +1,9 @@
 package habitsapp.data.repository;
 
-import habitsapp.data.repository.Repository;
 import habitsapp.ui.in.UserInputByConsole;
 import habitsapp.data.models.Habit;
 import habitsapp.data.models.User;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import static habitsapp.data.repository.DataLoader.repository;
 import static habitsapp.data.repository.DataLoader.userInput;
@@ -17,124 +16,117 @@ public class RepositoryTest {
     private final User existingUser = new User("ExistingName", "existing@mail.ru", "ExistingPass");
     private final Habit existingHabit = new Habit("ExistingTitle", "ExistingDescription", 1);
 
-    /*
-    AccountRepositoryTest() {
-        accountRepository.loadUser(existingUser);
-        assertThat(accountRepository.isUserExists(existingUser.getEmail())).isEqualTo(true);
-        accountRepository.loadHabit(existingUser.getEmail(), existingHabit);
-        assertThat(accountRepository.getHabitsList(existingUser.getEmail())).isNotEmpty();
-    }
-
-     */
-
-    @Test
-    void shouldAddThenRemoveUserToCollection() {
-        repository = new Repository();
-        userInput = new UserInputByConsole();
-        repository.loadUser(user);
-        assertThat(repository.isUserExists(user.getEmail())).isEqualTo(true);
-        repository.deleteOwnAccount(user.getEmail(), "UserPass");
-        assertThat(repository.isUserExists(user.getEmail())).isEqualTo(false);
-    }
-
-    @Test
-    void shouldAddThenRemoveUserAndHabit() {
-        repository = new Repository();
-        userInput = new UserInputByConsole();
-        repository.loadUser(user);
-        assertThat(repository.getHabitsSet(user.getEmail())).isEmpty();
-        repository.loadHabit(user.getEmail(), habit);
-        assertThat(repository.getHabitsSet(user.getEmail())).isNotEmpty();
-        repository.deleteHabit(user.getEmail(), habit.getTitle());
-        assertThat(repository.getHabitsSet(user.getEmail())).isEmpty();
-        repository.deleteOwnAccount(user.getEmail(), "UserPass");
-        assertThat(repository.isUserExists(user.getEmail())).isEqualTo(false);
-    }
-
-    @Test
-    void shouldUpdateHabitTitle() {
+    @BeforeEach
+    void setUp() {
         repository = new Repository();
         userInput = new UserInputByConsole();
         repository.loadUser(existingUser);
         repository.loadHabit(existingUser.getEmail(), existingHabit);
+    }
+
+    @Test
+    @DisplayName("Should add a user to the collection and then remove them")
+    void shouldAddThenRemoveUserToCollection() {
+        // Given
+        assertThat(repository.isUserExists(existingUser.getEmail())).isTrue();
+        // When
+        repository.deleteOwnAccount(existingUser.getEmail(), "ExistingPass");
+        // Then
+        assertThat(repository.isUserExists(existingUser.getEmail())).isFalse();
+    }
+
+    @Test
+    @DisplayName("Should add a user and habit, then remove")
+    void shouldAddThenRemoveUserAndHabit() {
+        // Given
+        assertThat(repository.getHabitsSet(existingUser.getEmail())).isNotEmpty();
+        // When
+        repository.deleteHabit(existingUser.getEmail(), existingHabit.getTitle());
+        repository.deleteOwnAccount(existingUser.getEmail(), "ExistingPass");
+        // Then
+        assertThat(repository.getHabitsSet(existingUser.getEmail())).isEmpty();
+        assertThat(repository.isUserExists(existingUser.getEmail())).isFalse();
+    }
+
+    @Test
+    @DisplayName("Should update the habit's title")
+    void shouldUpdateHabitTitle() {
+        // When
         Habit changedHabit = existingHabit.clone();
         changedHabit.setTitle("NewTitle");
-        assertThat(repository.editHabit(existingUser.getEmail(), existingHabit, changedHabit)).isEqualTo(true);
+        // Then
+        assertThat(repository.editHabit(existingUser.getEmail(), existingHabit, changedHabit)).isTrue();
     }
 
     @Test
+    @DisplayName("Should update the habit's description")
     void shouldUpdateHabitDescription() {
-        repository = new Repository();
-        userInput = new UserInputByConsole();
-        repository.loadUser(existingUser);
-        repository.loadHabit(existingUser.getEmail(), existingHabit);
+        // When
         Habit changedHabit = existingHabit.clone();
         changedHabit.setDescription("NewDescription");
-        assertThat(repository.editHabit(existingUser.getEmail(), existingHabit, changedHabit)).isEqualTo(true);
+        // Then
+        assertThat(repository.editHabit(existingUser.getEmail(), existingHabit, changedHabit)).isTrue();
     }
 
     @Test
+    @DisplayName("Should update the habit's period")
     void shouldUpdateHabitPeriod() {
-        repository = new Repository();
-        userInput = new UserInputByConsole();
-        repository.loadUser(existingUser);
-        repository.loadHabit(existingUser.getEmail(), existingHabit);
+        // When
         Habit changedHabit = existingHabit.clone();
         changedHabit.setPeriod(7);
-        assertThat(repository.editHabit(existingUser.getEmail(), existingHabit, changedHabit)).isEqualTo(true);
+        // Then
+        assertThat(repository.editHabit(existingUser.getEmail(), existingHabit, changedHabit)).isTrue();
     }
 
     @Test
+    @DisplayName("Should mark existing habit as completed")
     void shouldMarkHabitInCollection() {
-        repository = new Repository();
-        userInput = new UserInputByConsole();
-        repository.loadUser(existingUser);
-        repository.loadHabit(existingUser.getEmail(), existingHabit);
-        assertThat(repository.markHabitAsCompleted(existingUser.getEmail(), existingHabit)).isEqualTo(true);
-        assertThat(repository.markHabitAsCompleted(user.getEmail(), habit)).isEqualTo(false);
+        assertThat(repository.markHabitAsCompleted(existingUser.getEmail(), existingHabit)).isTrue();
+        assertThat(repository.markHabitAsCompleted(user.getEmail(), habit)).isFalse();
     }
 
     @Test
+    @DisplayName("Should authorize the user or return null if credentials are wrong")
     void shouldAuthorizeUserAndThenReturnUserOrNull() {
-        repository = new Repository();
-        userInput = new UserInputByConsole();
-        repository.loadUser(existingUser);
-        repository.loadHabit(existingUser.getEmail(), existingHabit);
         assertThat(repository.userAuth(existingUser.getEmail(), "WrongPass").isPresent()).isFalse();
         assertThat(repository.userAuth(existingUser.getEmail(), "ExistingPass").isPresent()).isTrue();
     }
 
     @Test
+    @DisplayName("Should update the user's email")
     void shouldUpdateUserEmail() {
-        repository = new Repository();
-        userInput = new UserInputByConsole();
-        repository.loadUser(existingUser);
-        repository.loadHabit(existingUser.getEmail(), existingHabit);
+        // Given
         User changedUser = existingUser.clone();
         changedUser.setEmail("newemail@mail.ru");
-        assertThat(repository.isUserExists(existingUser.getEmail())).isEqualTo(true);
-        assertThat(repository.isUserExists(changedUser.getEmail())).isEqualTo(false);
+        assertThat(repository.isUserExists(existingUser.getEmail())).isTrue();
+        assertThat(repository.isUserExists(changedUser.getEmail())).isFalse();
 
+        // When
         repository.editUserData(existingUser.getEmail(), changedUser, "ExistingPass");
-        assertThat(repository.isUserExists(existingUser.getEmail())).isEqualTo(false);
-        assertThat(repository.isUserExists(changedUser.getEmail())).isEqualTo(true);
+        // Then
+        assertThat(repository.isUserExists(existingUser.getEmail())).isFalse();
+        assertThat(repository.isUserExists(changedUser.getEmail())).isTrue();
 
+        // When
         repository.editUserData(changedUser.getEmail(), existingUser, "ExistingPass");
-        assertThat(repository.isUserExists(existingUser.getEmail())).isEqualTo(true);
-        assertThat(repository.isUserExists(changedUser.getEmail())).isEqualTo(false);
+        // Then
+        assertThat(repository.isUserExists(existingUser.getEmail())).isTrue();
+        assertThat(repository.isUserExists(changedUser.getEmail())).isFalse();
     }
 
     @Test
+    @DisplayName("Should remove a user and then load them to collection")
     void shouldRemoveAndThenLoadUserToCollection() {
-        repository = new Repository();
-        userInput = new UserInputByConsole();
-        repository.loadUser(existingUser);
-        repository.loadHabit(existingUser.getEmail(), existingHabit);
-        assertThat(repository.isUserExists(existingUser.getEmail())).isEqualTo(true);
+        // Given
+        assertThat(repository.isUserExists(existingUser.getEmail())).isTrue();
+        // When
         repository.deleteOwnAccount(existingUser.getEmail(), "ExistingPass");
-        assertThat(repository.isUserExists(existingUser.getEmail())).isEqualTo(false);
+        // Then
+        assertThat(repository.isUserExists(existingUser.getEmail())).isFalse();
+        // When
         repository.loadUser(existingUser);
-        assertThat(repository.isUserExists(existingUser.getEmail())).isEqualTo(true);
+        // Then
+        assertThat(repository.isUserExists(existingUser.getEmail())).isTrue();
     }
 
 }

@@ -1,6 +1,6 @@
 package habitsapp.data.models;
 
-import habitsapp.data.models.User;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -10,11 +10,15 @@ public class UserTest {
     private final User user = new User("Name", "name@mail.ru", "UserPass");
 
     @Test
-    void shouldPassWhenUserIsAuthentic() {
+    @DisplayName("Should not pass when user is different")
+    void shouldNotPassWhenUserIsDifferent() {
+        // Given
         User clonedUser = user.clone();
-        assertThat(user.isUserAuthentic(clonedUser)).isEqualTo(true);
+        assertThat(user.isUserAuthentic(clonedUser)).isTrue();
+        // When
         clonedUser.setPassword("NewPass");
-        assertThat(user.isUserAuthentic(clonedUser)).isEqualTo(false);
+        // Then
+        assertThat(user.isUserAuthentic(clonedUser)).isFalse();
     }
 
 }
