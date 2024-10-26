@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd"
+        logicalFilePath="db/changelog.xml">
+        <changeSet id="003-insert-data" author="asvcx">
+
+            <insert tableName="users" schemaName="habits_model_schema">
+                <column name="UserID" valueNumeric="nextval('habits_model_schema.user_seq')"/>
+                <column name="UserName" value="admin"/>
+                <column name="Password" value="AdminPassword"/>
+                <column name="Email" value="admin@mail.ru"/>
+                <column name="Blocked" value="false"/>
+                <column name="AccessLevel" value="ADMIN"/>
+            </insert>
+
+            <insert tableName="users" schemaName="habits_model_schema">
+                <column name="UserID" valueNumeric="nextval('habits_model_schema.user_seq')"/>
+                <column name="UserName" value="user"/>
+                <column name="Password" value="UserPassword"/>
+                <column name="Email" value="user@mail.ru"/>
+                <column name="Blocked" value="false"/>
+                <column name="AccessLevel" value="USER"/>
+            </insert>
+
+            <insert tableName="habits" schemaName="habits_model_schema">
+                <column name="HabitID" valueNumeric="nextval('habits_model_schema.habit_seq')"/>
+                <column name="UserID" value="2"/>
+                <column name="Title" value="Running"/>
+                <column name="Description" value="For health"/>
+                <column name="Period" valueNumeric="1"/>
+                <column name="StartDate" value="2024-10-17 14:30:00"/>
+            </insert>
+
+    </changeSet>
+</databaseChangeLog>

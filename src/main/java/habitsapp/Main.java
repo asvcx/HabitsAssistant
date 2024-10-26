@@ -1,19 +1,40 @@
 package habitsapp;
 
-import habitsapp.console.Menu;
-import habitsapp.data.DataController;
-import habitsapp.models.User;
+import habitsapp.data.database.Migration;
+import habitsapp.ui.out.MenuConsole;
+import habitsapp.data.repository.DataLoader;
+
+import java.io.IOException;
+import java.util.Optional;
+import java.util.Properties;
 
 public class Main {
-
-    public static void main(String[] args) {
-        User testUser = new User("user", "user@mail.ru", "UserPsw");
-        User testAdmin = new User("admin", "admin@mail.ru", "AdminPsw");
-        testAdmin.setAccessLevel(User.AccessLevel.ADMIN);
-        DataController.addUser(testUser);
-        DataController.addUser(testAdmin);
-
-        Menu.startGuestMenu();
+    /**
+     * Invokes migration, data loading, and starts main menu.
+     * Before application is closed, DataLoader saves changes to database.
+     */
+    public static void main(final String[] args) {
+        Optional<Properties> dbProperties = readDatabaseProperties();
+        if (dbProperties.isEmpty()) {
+            return;
+        }
+        Migration.migrate(dbProperties.get());
+        new DataLoader().load();
+        new MenuConsole().startGuestMenu();
+        new DataLoader().release();
     }
-
+    /**
+     * Loads properties file.
+     */
+    private static Optional<Properties> readDatabaseProperties() {
+        Properties dbProperties = new Properties();
+        try {
+            dbProperties.load(Main.class.getClassLoader().getResourceAsStream("application.properties"));
+        }
+        catch (IOException ex) {
+            System.out.println("Database connection error");
+            return Optional.empty();
+        }
+        return Optional.of(dbProperties);
+    }
 }
