@@ -1,5 +1,6 @@
 plugins {
     id("java")
+    war
 }
 
 group = "org.example"
@@ -21,6 +22,17 @@ dependencies {
     implementation("org.liquibase:liquibase-core:4.9.1")
     implementation("org.slf4j:slf4j-api:2.0.13")
     testImplementation("ch.qos.logback:logback-classic:1.5.6")
+    compileOnly("jakarta.servlet:jakarta.servlet-api:6.1.0")
+    implementation("com.fasterxml.jackson.core:jackson-core:2.17.2")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.17.2")
+    implementation("org.mapstruct:mapstruct:1.5.5.Final")
+    annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
+    implementation("org.aspectj:aspectjrt:1.9.22")
+}
+
+tasks.war {
+    archiveFileName.set("HabitsAssistant.war")
+    webAppDirectory = file("src/main/webapp")
 }
 
 tasks.test {
