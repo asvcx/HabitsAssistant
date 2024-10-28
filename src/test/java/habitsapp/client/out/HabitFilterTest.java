@@ -1,7 +1,8 @@
 package habitsapp.client.out;
 
-import habitsapp.models.Habit;
-import habitsapp.client.session.Session;
+import org.habitsapp.client.out.HabitFilter;
+import org.habitsapp.models.Habit;
+import org.habitsapp.client.session.Session;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

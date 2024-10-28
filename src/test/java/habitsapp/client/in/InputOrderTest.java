@@ -1,11 +1,14 @@
 package habitsapp.client.in;
 
-import habitsapp.server.ApplicationContext;
-import habitsapp.models.AccessLevel;
-import habitsapp.server.repository.Repository;
-import habitsapp.models.User;
-import habitsapp.client.session.Session;
-import habitsapp.server.service.UserService;
+import org.habitsapp.client.in.InputOrder;
+import org.habitsapp.client.in.UserInput;
+import org.habitsapp.client.in.UserInputByConsole;
+import org.habitsapp.server.ApplicationContext;
+import org.habitsapp.models.AccessLevel;
+import org.habitsapp.server.repository.Repository;
+import org.habitsapp.models.User;
+import org.habitsapp.client.session.Session;
+import org.habitsapp.server.service.UserService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

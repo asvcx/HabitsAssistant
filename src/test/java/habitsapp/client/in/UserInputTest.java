@@ -1,10 +1,11 @@
 package habitsapp.client.in;
 
-import habitsapp.server.repository.Repository;
-import habitsapp.server.repository.DataLoader;
-import habitsapp.models.Habit;
-import habitsapp.models.User;
-import habitsapp.client.session.Session;
+import org.habitsapp.client.in.UserInput;
+import org.habitsapp.client.in.UserInputByConsole;
+import org.habitsapp.server.repository.Repository;
+import org.habitsapp.models.Habit;
+import org.habitsapp.models.User;
+import org.habitsapp.client.session.Session;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,7 +16,7 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.Scanner;
 
-import static habitsapp.client.in.UserInputByConsole.*;
+import static org.habitsapp.client.in.UserInputByConsole.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class UserInputTest {

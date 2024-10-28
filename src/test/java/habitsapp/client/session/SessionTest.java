@@ -1,7 +1,8 @@
 package habitsapp.client.session;
 
-import habitsapp.models.AccessLevel;
-import habitsapp.models.dto.UserDto;
+import org.habitsapp.client.session.Session;
+import org.habitsapp.models.AccessLevel;
+import org.habitsapp.models.dto.UserDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

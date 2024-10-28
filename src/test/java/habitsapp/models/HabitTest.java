@@ -1,6 +1,6 @@
 package habitsapp.models;
 
-import habitsapp.models.Habit;
+import org.habitsapp.models.Habit;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

@@ -1,12 +1,12 @@
 package habitsapp.server;
 
-import habitsapp.models.AccessLevel;
-import habitsapp.models.EntityStatus;
-import habitsapp.models.User;
-import habitsapp.models.Habit;
-import habitsapp.server.repository.Database;
-import habitsapp.server.repository.DatabasePostgres;
-import habitsapp.server.migration.Migration;
+import org.habitsapp.models.AccessLevel;
+import org.habitsapp.models.EntityStatus;
+import org.habitsapp.models.User;
+import org.habitsapp.models.Habit;
+import org.habitsapp.server.repository.Database;
+import org.habitsapp.server.repository.DatabasePostgres;
+import org.habitsapp.server.migration.Migration;
 import org.junit.jupiter.api.*;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;

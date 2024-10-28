@@ -1,7 +1,7 @@
 package habitsapp.server;
 
-import habitsapp.client.session.AuthorizationResult;
-import habitsapp.client.session.Request;
+import org.habitsapp.client.session.AuthorizationResult;
+import org.habitsapp.client.session.Request;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

@@ -1,13 +1,13 @@
 package habitsapp.server;
 
-import habitsapp.client.in.UserInput;
-import habitsapp.client.in.UserInputByConsole;
-import habitsapp.models.Habit;
-import habitsapp.models.User;
-import habitsapp.server.repository.Repository;
-import habitsapp.client.session.AuthorizationResult;
-import habitsapp.server.service.HabitService;
-import habitsapp.server.service.UserService;
+import org.habitsapp.client.in.UserInput;
+import org.habitsapp.client.in.UserInputByConsole;
+import org.habitsapp.models.Habit;
+import org.habitsapp.models.User;
+import org.habitsapp.server.repository.Repository;
+import org.habitsapp.client.session.AuthorizationResult;
+import org.habitsapp.server.service.HabitService;
+import org.habitsapp.server.service.UserService;
 import org.junit.jupiter.api.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
