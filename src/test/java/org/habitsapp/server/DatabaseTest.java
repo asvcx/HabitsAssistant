@@ -1,4 +1,4 @@
-package habitsapp.server;
+package org.habitsapp.server;
 
 import org.habitsapp.models.AccessLevel;
 import org.habitsapp.models.EntityStatus;

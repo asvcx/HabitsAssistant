@@ -1,20 +1,24 @@
 package org.habitsapp.models;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import java.time.Instant;
 import java.util.TreeSet;
 
+@Getter
+@Setter
 public class Habit implements Comparable<Habit>, Cloneable {
-
     private int id;
     private String title;
     private String description;
     private int period;
     private Instant startedDate;
     private TreeSet<Instant> completionDates;
+    private long userId;
     private EntityStatus status;
-    long userID;
 
     public Habit() {
         completionDates = new TreeSet<>();
@@ -32,42 +36,16 @@ public class Habit implements Comparable<Habit>, Cloneable {
         setPeriod(period);
     }
 
-    public Habit(int habitID, String title, String description, int period, Instant startedDate, long userID) {
+    public Habit(int habitID, String title, String description, int period, Instant startedDate, long userId) {
         this(title, description, period);
         this.id = habitID;
         this.startedDate = startedDate;
-        this.userID = userID;
+        this.userId = userId;
     }
 
     @Override
     public int compareTo(Habit other) {
         return this.title.compareTo(other.title);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null || getClass() != obj.getClass()) return false;
-        Habit habit = (Habit) obj;
-        return title.equals(habit.title);
-    }
-
-    @Override
-    public int hashCode() {
-        return title.hashCode();
-    }
-
-    @Override
-    public String toString() {
-        return String.format("%s [период: %d, описание: %s]", this.title, this.period, this.description);
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public int getId() {
-        return this.id;
     }
 
     public void setTitle(String title) {
@@ -76,44 +54,8 @@ public class Habit implements Comparable<Habit>, Cloneable {
         }
     }
 
-    public void setUserID(long userID) {
-        this.userID = userID;
-    }
-
-    public long getUserID() {
-        return this.userID;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
     public void setPeriod(int period) {
         this.period = Math.max(period, 1);
-    }
-
-    public void setStatus(EntityStatus status) {
-        this.status = status;
-    }
-
-    public EntityStatus getStatus() {
-        return this.status;
-    }
-
-    public void setUserEmail(long userID) {
-        this.userID = userID;
-    }
-
-    public String getTitle() {
-        return this.title;
-    }
-
-    public String getDescription() {
-        return this.description;
-    }
-
-    public int getPeriod() {
-        return this.period;
     }
 
     public Instant getStartDate() {
@@ -166,9 +108,26 @@ public class Habit implements Comparable<Habit>, Cloneable {
         }
     }
 
-    public boolean addCompletionDate(Instant date) {
+    public void addCompletionDate(Instant date) {
         completionDates.add(date);
-        return true;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s [период: %d, описание: %s]", this.title, this.period, this.description);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Habit habit = (Habit) obj;
+        return title.equals(habit.title);
+    }
+
+    @Override
+    public int hashCode() {
+        return title.hashCode();
     }
 
     @Override

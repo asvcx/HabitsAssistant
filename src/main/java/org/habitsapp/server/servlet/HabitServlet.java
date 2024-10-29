@@ -1,7 +1,7 @@
 package org.habitsapp.server.servlet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.habitsapp.client.session.HabitCreationResult;
+import org.habitsapp.models.results.HabitCreationResult;
 import org.habitsapp.server.ApplicationContext;
 import org.habitsapp.exchange.HabitChangeDto;
 import org.habitsapp.exchange.HabitsListDto;
@@ -23,6 +23,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @WebServlet("/api/habits")
 public class HabitServlet extends HttpServlet {
@@ -30,6 +31,36 @@ public class HabitServlet extends HttpServlet {
     UserService userService;
     HabitService habitService;
     Repository repository;
+
+    public String readToken(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        String token = req.getHeader("Authorization");
+        if (token == null || !token.startsWith("Token ")) {
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("You have not been authorized"));
+            return null;
+        }
+        String tokenValue = token.substring(6);
+        return repository.isUserAuthorized(tokenValue) ? tokenValue : null;
+    }
+
+    public HabitDto readHabitDto(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        HabitDto habitDto;
+        try {
+            habitDto = objectMapper.readValue(req.getInputStream(), HabitDto.class);
+        } catch (IOException e) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("Incorrect habit data format"));
+            return null;
+        }
+        if(habitDto.getTitle() == null || habitDto.getDescription() == null) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("Habit have not been provided"));
+            return null;
+        }
+        return habitDto;
+    }
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -51,16 +82,15 @@ public class HabitServlet extends HttpServlet {
         String token = readToken(req, resp);
         Optional<User> user = repository.getUserByToken(token);
         if (user.isEmpty()) {
-            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("You have not been authorized"));
             return;
         }
         // Get list
-        List<Habit> habits = repository.getHabitsOfUser(user.get().getEmail()).stream().toList();
+        Set<Habit> habits = repository.getHabitsOfUser(user.get().getEmail());
         List<HabitDto> habitsDto = habits.stream()
                 .map(HabitMapper.INSTANCE::habitToHabitDto)
                 .toList();
         HabitsListDto habitsList = new HabitsListDto(habitsDto);
+
         boolean isAuthorized = repository.isUserAuthorized(token);
         // Respond
         if(isAuthorized) {
@@ -68,7 +98,7 @@ public class HabitServlet extends HttpServlet {
             objectMapper.writeValue(resp.getOutputStream(), habitsList);
         } else {
             resp.setStatus(HttpServletResponse.SC_CONFLICT);
-            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("Something gone wrong"));
+            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("Failed to return habits list"));
         }
     }
 
@@ -91,7 +121,7 @@ public class HabitServlet extends HttpServlet {
             objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("Habit has been created"));
         } else {
             resp.setStatus(HttpServletResponse.SC_CONFLICT);
-            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("Habit has been created"));
+            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("Failed to create a habit"));
         }
     }
 
@@ -105,8 +135,6 @@ public class HabitServlet extends HttpServlet {
         String token = readToken(req, resp);
         // Check token
         if (token == null || token.isEmpty()) {
-            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("You have not been authorized"));
             return;
         }
         // Check dto
@@ -144,14 +172,11 @@ public class HabitServlet extends HttpServlet {
         // Check token
         String token = readToken(req, resp);
         if (token == null || token.isEmpty()) {
-            resp.setStatus(HttpServletResponse.SC_PRECONDITION_FAILED);
-            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("You have not been authorized"));
             return;
         }
         // Check habit title
         String pathInfo = req.getPathInfo();
         if (pathInfo == null || pathInfo.length() < 2) {
-            System.out.println("Не найдено название привыки");
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("Habit title has not been provided"));
             return;
@@ -162,43 +187,12 @@ public class HabitServlet extends HttpServlet {
                 && user.isPresent()
                 && habitService.deleteHabit(user.get().getEmail(), token, habitTitle);
         if(isDeleted) {
-            System.out.println("Привычка удалена. Возвращение ответа.");
             resp.setStatus(HttpServletResponse.SC_OK);
             resp.getWriter().write("Habit deleted successfully");
         } else {
-            System.out.println("Не удалось удалить привычку.");
             resp.setStatus(HttpServletResponse.SC_CONFLICT);
-            resp.getWriter().write("Something gone wrong");
+            resp.getWriter().write("Failed to delete the habit");
         }
     }
 
-    public String readToken(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        String token = req.getHeader("Authorization");
-        if (token == null || !token.startsWith("Token ")) {
-            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("You have not been authorized"));
-            return null;
-        }
-        String tokenValue = token.substring(6);
-        return repository.isUserAuthorized(tokenValue) ? tokenValue : null;
-    }
-
-    public HabitDto readHabitDto(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        HabitDto habitDto;
-        try {
-            habitDto = objectMapper.readValue(req.getInputStream(), HabitDto.class);
-        } catch (IOException e) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("Incorrect habit data format"));
-            return null;
-        }
-        if(habitDto.getTitle() == null || habitDto.getDescription() == null) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("Habit have not been provided"));
-            return null;
-        }
-        return habitDto;
-    }
 }

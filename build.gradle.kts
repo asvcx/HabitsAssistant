@@ -30,6 +30,10 @@ dependencies {
     annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
     implementation("org.aspectj:aspectjrt:1.9.22")
     implementation("org.aspectj:aspectjweaver:1.9.22")
+    compileOnly("org.projectlombok:lombok:1.18.34")
+    annotationProcessor("org.projectlombok:lombok:1.18.34")
+    testCompileOnly("org.projectlombok:lombok:1.18.34")
+    testAnnotationProcessor("org.projectlombok:lombok:1.18.34")
 }
 
 tasks.war {
@@ -38,5 +42,5 @@ tasks.war {
 }
 
 tasks.test {
-    //useJUnitPlatform()
+    useJUnitPlatform()
 }

@@ -1,6 +1,6 @@
-package habitsapp.server;
+package org.habitsapp.server;
 
-import org.habitsapp.client.session.AuthorizationResult;
+import org.habitsapp.models.results.AuthorizationResult;
 import org.habitsapp.client.session.Request;
 import org.junit.jupiter.api.Test;
 
@@ -13,12 +13,12 @@ public class ServletTest {
         AuthorizationResult result = null;
         // Login with wrong credentials
         result = request.login("WrongEmail", "WrongPassword");
-        assertThat(result.getSuccess()).isFalse();
+        assertThat(result.isSuccess()).isFalse();
         // Login with correct credentials
         result = request.login("admin@mail.ru", "AdminPassword");
-        assertThat(result.getSuccess()).isTrue();
+        assertThat(result.isSuccess()).isTrue();
         // Logout
         boolean isLoggedOut = request.logout(result.getToken());
-        assertThat(result.getSuccess()).isTrue();
+        assertThat(result.isSuccess()).isTrue();
     }
 }

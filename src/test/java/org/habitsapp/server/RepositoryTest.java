@@ -1,11 +1,11 @@
-package habitsapp.server;
+package org.habitsapp.server;
 
 import org.habitsapp.client.in.UserInput;
 import org.habitsapp.client.in.UserInputByConsole;
 import org.habitsapp.models.Habit;
 import org.habitsapp.models.User;
 import org.habitsapp.server.repository.Repository;
-import org.habitsapp.client.session.AuthorizationResult;
+import org.habitsapp.models.results.AuthorizationResult;
 import org.habitsapp.server.service.HabitService;
 import org.habitsapp.server.service.UserService;
 import org.junit.jupiter.api.*;
@@ -98,8 +98,8 @@ public class RepositoryTest {
     void shouldAuthorizeUserAndThenReturnUserOrNull() {
         AuthorizationResult correctAuthResult = userService.authorizeUser(existingUser.getEmail(), "ExistingPass");
         AuthorizationResult wrongAuthResult = userService.authorizeUser(existingUser.getEmail(), "WrongPass");
-        assertThat(correctAuthResult.getSuccess()).isTrue();
-        assertThat(wrongAuthResult.getSuccess()).isFalse();
+        assertThat(correctAuthResult.isSuccess()).isTrue();
+        assertThat(wrongAuthResult.isSuccess()).isFalse();
     }
 
     @Test

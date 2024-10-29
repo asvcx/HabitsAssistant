@@ -1,4 +1,4 @@
-package habitsapp.models;
+package org.habitsapp.models;
 
 import org.habitsapp.models.User;
 import org.junit.jupiter.api.DisplayName;
@@ -15,11 +15,11 @@ public class UserTest {
     void shouldNotPassWhenUserIsDifferent() {
         // Given
         User clonedUser = user.clone();
-        assertThat(user.isUserAuthentic(clonedUser)).isTrue();
+        assertThat(user.isUserEquivalent(clonedUser)).isTrue();
         // When
         clonedUser.setPassword("NewPass");
         // Then
-        assertThat(user.isUserAuthentic(clonedUser)).isFalse();
+        assertThat(user.isUserEquivalent(clonedUser)).isFalse();
     }
 
 }

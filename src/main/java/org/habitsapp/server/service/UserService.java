@@ -1,7 +1,7 @@
 package org.habitsapp.server.service;
 
-import org.habitsapp.client.session.AuthorizationResult;
-import org.habitsapp.client.session.RegistrationResult;
+import org.habitsapp.models.results.AuthorizationResult;
+import org.habitsapp.models.results.RegistrationResult;
 import org.habitsapp.models.AccessLevel;
 import org.habitsapp.models.User;
 import org.habitsapp.models.dto.UserDto;

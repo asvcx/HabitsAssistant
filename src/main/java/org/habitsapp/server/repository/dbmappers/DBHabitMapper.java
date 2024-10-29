@@ -19,7 +19,7 @@ public class DBHabitMapper implements ResultSetMapper<Habit> {
     }
 
     public void mapFromObj(PreparedStatement pStatement, Habit habit) throws SQLException {
-        pStatement.setLong(1, habit.getUserID());
+        pStatement.setLong(1, habit.getUserId());
         pStatement.setString(2, habit.getTitle());
         pStatement.setString(3, habit.getDescription());
         pStatement.setInt(4, habit.getPeriod());

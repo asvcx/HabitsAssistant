@@ -23,28 +23,9 @@ public class DataLoader {
     }
 
     /**
-     * Loads properties file for connect to database and instantiates userInput, database and repository
-     */
-    public void init() {
-        /*
-        Properties properties = new Properties();
-        try {
-            properties.load(Main.class.getClassLoader().getResourceAsStream("application.properties"));
-        }
-        catch (IOException e) {
-            System.out.println("Exception: " + e.getMessage());
-            return;
-        }
-        database = new DatabasePostgres(properties);
-        repository = new Repository();
-         */
-    }
-
-    /**
-     * Loads data to Repository using Database class.
+     * Load data to Repository using Database class.
      */
     public void load() {
-        init();
         List<User> users = database.loadUsers();
         for (User user : users) {
             repository.loadUser(user);
@@ -57,7 +38,7 @@ public class DataLoader {
     }
 
     /**
-     * Saves data from Repository to database using Database class.
+     * Save data from Repository to database using Database class.
      */
     public void release() {
         // Save new users
@@ -72,9 +53,9 @@ public class DataLoader {
         List<User> users = repository.getUsers();
         for (User user : users) {
             List<Habit> habits = new LinkedList<>(repository.getHabitsOfUser(user.getEmail()));
-            database.saveHabits(user.getID(), habits);
-            database.updateHabits(user.getID(), habits);
-            database.removeHabits(user.getID(), habits);
+            database.saveHabits(user.getId(), habits);
+            database.updateHabits(user.getId(), habits);
+            database.removeHabits(user.getId(), habits);
         }
         // Remove users which was marked as deleted
         List<User> deletedUsers = repository.getUsersByStatus(EntityStatus.DELETED);

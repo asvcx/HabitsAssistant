@@ -1,4 +1,4 @@
-package habitsapp.client.in;
+package org.habitsapp.client.in;
 
 import org.habitsapp.client.in.UserInput;
 import org.habitsapp.client.in.UserInputByConsole;

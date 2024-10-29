@@ -1,6 +1,6 @@
 package org.habitsapp.server.service;
 
-import org.habitsapp.client.session.HabitCreationResult;
+import org.habitsapp.models.results.HabitCreationResult;
 import org.habitsapp.models.EntityStatus;
 import org.habitsapp.models.Habit;
 import org.habitsapp.models.dto.HabitDto;

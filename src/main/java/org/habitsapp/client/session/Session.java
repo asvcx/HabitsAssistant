@@ -1,5 +1,7 @@
 package org.habitsapp.client.session;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.habitsapp.models.AccessLevel;
 import org.habitsapp.models.Habit;
 import org.habitsapp.models.User;
@@ -54,7 +56,7 @@ public class Session {
     }
 
     public static long getID() {
-        return currentProfile.getID();
+        return currentProfile.getId();
     }
 
     public static String getEmail() {

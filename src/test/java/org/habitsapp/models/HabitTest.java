@@ -1,4 +1,4 @@
-package habitsapp.models;
+package org.habitsapp.models;
 
 import org.habitsapp.models.Habit;
 import org.junit.jupiter.api.DisplayName;

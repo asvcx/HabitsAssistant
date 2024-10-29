@@ -1,4 +1,4 @@
-package habitsapp.client.session;
+package org.habitsapp.client.session;
 
 import org.habitsapp.client.session.Session;
 import org.habitsapp.models.AccessLevel;

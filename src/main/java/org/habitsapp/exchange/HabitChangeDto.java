@@ -1,31 +1,16 @@
 package org.habitsapp.exchange;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.habitsapp.models.dto.HabitDto;
 
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class HabitChangeDto {
     private HabitDto oldHabit;
     private HabitDto newHabit;
-
-    public HabitChangeDto() {}
-
-    public HabitChangeDto(HabitDto oldHabit, HabitDto newHabit) {
-        this.oldHabit = oldHabit;
-        this.newHabit = newHabit;
-    }
-
-    public HabitDto getOldHabit() {
-        return oldHabit;
-    }
-
-    public void setOldHabit(HabitDto oldHabit) {
-        this.oldHabit = oldHabit;
-    }
-
-    public HabitDto getNewHabit() {
-        return newHabit;
-    }
-
-    public void setNewHabit(HabitDto newHabit) {
-        this.newHabit = newHabit;
-    }
 }

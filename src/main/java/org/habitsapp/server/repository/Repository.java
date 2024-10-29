@@ -50,7 +50,7 @@ public class Repository {
         if (!isUserExists(user.getEmail().toLowerCase())) {
             habitsOfUser.put(user, new TreeSet<>());
             userByEmail.put(user.getEmail().toLowerCase(), user);
-            userByID.put(user.getID(), user);
+            userByID.put(user.getId(), user);
             return true;
         }
         return false;
@@ -78,7 +78,7 @@ public class Repository {
         userByEmail.put(newEmail, changedUser);
         habitsOfUser.put(changedUser, (TreeSet<Habit>) userHabits);
         userByToken.put(token, user);
-        setHabits(changedUser.getID(), userHabits.stream().toList());
+        setHabits(changedUser.getId(), userHabits.stream().toList());
         user.setAccountStatus(EntityStatus.UPDATED);
         return true;
     }
@@ -110,7 +110,7 @@ public class Repository {
         email = email.toLowerCase();
         if (loadHabit(email, habit)) {
             habit.setStatus(EntityStatus.CREATED);
-            habit.setUserID(userByEmail.get(email).getID());
+            habit.setUserId(userByEmail.get(email).getId());
             return true;
         }
         return false;

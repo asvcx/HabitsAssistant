@@ -1,11 +1,10 @@
 package org.habitsapp.server.servlet;
 
-import org.habitsapp.annotations.Measurable;
 import org.habitsapp.server.ApplicationContext;
 import org.habitsapp.exchange.ResponseDto;
 import org.habitsapp.models.dto.UserDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.habitsapp.client.session.AuthorizationResult;
+import org.habitsapp.models.results.AuthorizationResult;
 import org.habitsapp.server.repository.Repository;
 import org.habitsapp.server.service.UserService;
 import jakarta.servlet.ServletConfig;
@@ -43,11 +42,11 @@ public class LoginServlet extends HttpServlet {
             userDTO = objectMapper.readValue(req.getInputStream(), UserDto.class);
         } catch (IOException e) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("Invalid user data format"));
+            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("Incorrect user data format"));
             return;
         }
         AuthorizationResult result = userService.authorizeUser(userDTO.getEmail(), userDTO.getPassword());
-        if (result.getSuccess()) {
+        if (result.isSuccess()) {
             resp.setHeader("Authorization", "Token " + result.getToken());
             resp.setStatus(HttpServletResponse.SC_OK);
             objectMapper.writeValue(resp.getOutputStream(), new ResponseDto(result.getMessage()));

@@ -2,8 +2,8 @@ package org.habitsapp.client.in;
 
 import org.habitsapp.client.session.AdminRequest;
 import org.habitsapp.client.session.Request;
-import org.habitsapp.client.session.AuthorizationResult;
-import org.habitsapp.client.session.RegistrationResult;
+import org.habitsapp.models.results.AuthorizationResult;
+import org.habitsapp.models.results.RegistrationResult;
 import org.habitsapp.models.dto.HabitDto;
 import org.habitsapp.models.Habit;
 import org.habitsapp.models.dto.HabitMapper;
@@ -27,7 +27,7 @@ public class InputOrder {
         String password = currentScanner.nextLine();
         Request request = new Request();
         AuthorizationResult result = request.login(email, password);
-        if (result.getSuccess()) {
+        if (result.isSuccess()) {
             Session.start(result.getUserDTO(), result.getToken());
             System.out.printf("Вы вошли как %s%n", Session.getName());
         } else {
@@ -78,6 +78,7 @@ public class InputOrder {
             return;
         }
         Request request = new Request();
+        System.out.printf("title [%s]; description [%s]; period [%d]; userId [%d]", title.get(), description.get(), period.get(), Session.getID());
         HabitDto tempHabit = new HabitDto(title.get(), description.get(), period.get(), Session.getID());
         boolean result = request.createHabit(Session.getToken(), tempHabit);
         if (result) {

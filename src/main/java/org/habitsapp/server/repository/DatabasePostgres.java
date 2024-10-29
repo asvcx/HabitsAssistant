@@ -6,6 +6,8 @@ import org.habitsapp.models.User;
 import org.habitsapp.server.repository.dbmappers.DBHabitMapper;
 import org.habitsapp.server.repository.dbmappers.ResultSetMapper;
 import org.habitsapp.server.repository.dbmappers.DBUserMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.time.Instant;
@@ -16,6 +18,8 @@ import java.util.*;
  * including loading, saving, updating, and deleting user and habit data.
  */
 public class DatabasePostgres implements Database {
+    private static final Logger logger = LoggerFactory.getLogger(DatabasePostgres.class);
+
     private final String DB_URL;
     private final String DB_USER_NAME;
     private final String DB_PASSWORD;
@@ -25,7 +29,7 @@ public class DatabasePostgres implements Database {
     private final String TBL_DATES_NAME;
 
     /**
-     * Creates a Database instance with the specified connection parameters.
+     * Create a Database instance with the specified connection parameters.
      */
     public DatabasePostgres(Properties properties) {
         DB_URL = properties.getProperty("db.url");
@@ -38,12 +42,11 @@ public class DatabasePostgres implements Database {
     }
 
     private void handleSQLException(SQLException e) {
-        System.out.println("Exception: " + e.getMessage());
-        e.printStackTrace();
+        logger.error("HandleSQLException: {}", e.getMessage());
     }
 
     /**
-     * Executes the given SQL query and maps the result set to a list of objects.
+     * Execute the given SQL query and maps the result set to a list of objects.
      */
     private <T> List<T> executeQuery(String query, ResultSetMapper<T> mapper) {
         List<T> results = new ArrayList<>();
@@ -60,7 +63,7 @@ public class DatabasePostgres implements Database {
     }
 
     /**
-     * Loads users from the database.
+     * Load users from the database.
      *
      * @return a list of users loaded from the database
      */
@@ -68,13 +71,13 @@ public class DatabasePostgres implements Database {
         String QUERY_LOAD_USERS = String.format("SELECT * FROM %s.%s;", SCHEMA_NAME, TBL_USERS_NAME);
         List<User> users = executeQuery(QUERY_LOAD_USERS, new DBUserMapper());
         for (User user : users) {
-            System.out.printf("Загружен пользователь [%s] с id = [%d]%n", user.getEmail(), user.getID());
+            logger.info("User loaded from database. Email : [{}]; id : [{}]", user.getEmail(), user.getId());
         }
         return users;
     }
 
     /**
-     * Loads habits from the database, grouped by user ID.
+     * Load habits from the database, grouped by user ID.
      *
      * @return a map where the key is the user ID and the value is a list of habits
      */
@@ -83,7 +86,7 @@ public class DatabasePostgres implements Database {
         List<Habit> habits = executeQuery(QUERY_LOAD_HABITS, new DBHabitMapper());
         Map<Long,List<Habit>> habitsByUserID = new HashMap<>();
         for (Habit habit : habits) {
-            Long userID = habit.getUserID();
+            long userID = habit.getUserId();
             loadDates(userID, habit);
             habitsByUserID.computeIfAbsent(userID, _ -> new ArrayList<>()).add(habit);
         }
@@ -91,7 +94,7 @@ public class DatabasePostgres implements Database {
     }
 
     /**
-     * Loads completion dates for specified habit.
+     * Load completion dates for specified habit.
      */
     private void loadDates(long userID, Habit habit) {
         String QUERY_LOAD_DATES = String.format("SELECT * FROM %s.%s WHERE \"UserID\" = ? AND \"Title\" = ?;", SCHEMA_NAME, TBL_DATES_NAME);
@@ -113,7 +116,7 @@ public class DatabasePostgres implements Database {
     }
 
     /**
-     * Saves a list of users to the database.
+     * Save a list of users to the database.
      */
     public void saveUsers(List<User> users) {
         String QUERY_SAVE_USER = String.format(
@@ -130,8 +133,9 @@ public class DatabasePostgres implements Database {
                     ResultSet resultSet = pStatement.executeQuery();
                     resultSet.next();
                     long userId = resultSet.getLong("UserID");
-                    user.setID(userId);
+                    user.setId(userId);
                     user.setAccountStatus(EntityStatus.STABLE);
+                    logger.info("User saved to database. Email : [{}]; id : [{}]", user.getEmail(), user.getId());
                 }
             }
         } catch (SQLException e) {
@@ -140,7 +144,7 @@ public class DatabasePostgres implements Database {
     }
 
     /**
-     * Saves a list of habits to the database.
+     * Save a list of habits to the database.
      */
     public void saveHabits(long userID, List<Habit> habits) {
         String QUERY_SAVE_HABIT = String.format(
@@ -165,7 +169,7 @@ public class DatabasePostgres implements Database {
     }
 
     /**
-     * Saves completion dates of specified habit.
+     * Save completion dates of specified habit.
      */
     private void saveDates(Connection connection, long userID, Habit habit) {
         String QUERY_SAVE_DATE = String.format(
@@ -188,7 +192,7 @@ public class DatabasePostgres implements Database {
     }
 
     /**
-     * Updates users with status 'UPDATED'.
+     * Update users with status 'UPDATED'.
      */
     public void updateUsers(List<User> users) {
         String QUERY_UPDATE_USER = String.format(
@@ -201,9 +205,10 @@ public class DatabasePostgres implements Database {
             for (User user : users) {
                 if (user.getAccountStatus() == EntityStatus.UPDATED) {
                     new DBUserMapper().mapFromObj(pStatement, user);
-                    pStatement.setLong(6, user.getID());
+                    pStatement.setLong(6, user.getId());
                     pStatement.executeUpdate();
                     user.setAccountStatus(EntityStatus.STABLE);
+                    logger.info("User updated in database. Email : [{}]; id : [{}]", user.getEmail(), user.getId());
                 }
             }
         } catch (SQLException e) {
@@ -212,7 +217,7 @@ public class DatabasePostgres implements Database {
     }
 
     /**
-     * Updates habits with status 'UPDATED' of a specified user.
+     * Update habits with status 'UPDATED' of a specified user.
      */
     public void updateHabits(long userID, List<Habit> habits) {
         String QUERY_UPDATE_HABIT = String.format(
@@ -237,7 +242,7 @@ public class DatabasePostgres implements Database {
     }
 
     /**
-     * Removes users from database whose status field is 'DELETED'
+     * Remove users from database whose status field is 'DELETED'
      */
     public void removeUsers(List<User> users) {
         String QUERY_REMOVE_USER = String.format(
@@ -248,9 +253,10 @@ public class DatabasePostgres implements Database {
             try (PreparedStatement pStatement = connection.prepareStatement(QUERY_REMOVE_USER)) {
                 for (User user : users) {
                     if (user.getAccountStatus() == EntityStatus.DELETED) {
-                        pStatement.setLong(1, user.getID());
+                        pStatement.setLong(1, user.getId());
                         pStatement.setString(2, user.getEmail());
                         pStatement.executeUpdate();
+                        logger.info("User deleted from database. Email : [{}]; id : [{}]", user.getEmail(), user.getId());
                     }
                 }
             } catch (SQLException e) {
@@ -262,7 +268,7 @@ public class DatabasePostgres implements Database {
     }
 
     /**
-     * Removes habits from database with status field set to 'DELETED'
+     * Remove habits from database with status field set to 'DELETED'
      */
     public void removeHabits(long userID, List<Habit> habits) {
         String QUERY_REMOVE_HABIT = String.format(
@@ -288,7 +294,7 @@ public class DatabasePostgres implements Database {
     }
 
     /**
-     * Removes completion dates from database for specified habit
+     * Remove completion dates from database for specified habit
      */
     private void removeDates(Connection connection, long userID, Habit habit) {
         String QUERY_REMOVE_DATE = String.format(

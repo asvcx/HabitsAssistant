@@ -4,8 +4,8 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
-import org.habitsapp.client.session.AuthorizationResult;
-import org.habitsapp.client.session.RegistrationResult;
+import org.habitsapp.models.results.AuthorizationResult;
+import org.habitsapp.models.results.RegistrationResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +43,7 @@ public class AuditUser {
         Object methodResult = joinPoint.proceed();
         if (methodResult instanceof AuthorizationResult) {
             AuthorizationResult result = (AuthorizationResult) methodResult;
-            if (result.getSuccess()) {
+            if (result.isSuccess()) {
                 logger.info("User [{}] has been authorized", email);
             } else {
                 logger.info("User [{}] failed to authorize", email);

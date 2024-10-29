@@ -16,14 +16,14 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.habitsapp.exchange.*;
+import org.habitsapp.models.results.AuthorizationResult;
+import org.habitsapp.models.results.RegistrationResult;
 
 import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.net.HttpURLConnection.HTTP_OK;
 
 public class Request {
-
-    String baseUrl = "http://localhost:8080/HabitsAssistant/api";
+    private static final String baseUrl = "http://localhost:8080/HabitsAssistant/api";
 
     private <T> T executeRequest(String path, String method, String jsonInput, Class<T> responseClass) {
         ObjectMapper objectMapper = new ObjectMapper();
@@ -39,7 +39,7 @@ public class Request {
             connection.disconnect();
             return response;
         } catch (IOException e) {
-            System.out.println("Ошибка при выполнении запроса: " + e.getMessage());
+            System.out.println("Exception occurred while request execution: " + e.getMessage());
             return null;
         }
     }
@@ -98,7 +98,6 @@ public class Request {
                 }
                 ResponseDto response = objectMapper.readValue(connection.getInputStream(), ResponseDto.class);
                 result = new AuthorizationResult(true, response.getMessage(), token, userDto);
-                System.out.println("Token: " + token);
             } else {
                 ResponseDto response = objectMapper.readValue(connection.getErrorStream(), ResponseDto.class);
                 result = new AuthorizationResult(false, response.getMessage(), null, null);
@@ -228,7 +227,7 @@ public class Request {
         ObjectMapper objectMapper = new ObjectMapper();
         int responseCode;
         try {
-            String json = objectMapper.writeValueAsString(habitDto);
+            String json = getJsonFromHabitDto(habitDto);
             HttpURLConnection connection = createConnection(path, "POST", Session.getToken(), json);
             responseCode = connection.getResponseCode();
             if (responseCode == HTTP_OK || responseCode == HTTP_CREATED) {
@@ -243,7 +242,7 @@ public class Request {
             System.out.println(e.getMessage());
             return false;
         }
-        return responseCode == HTTP_OK;
+        return responseCode == HTTP_OK || responseCode == HTTP_CREATED;
     }
 
     public boolean editHabit(String token, HabitDto oldHabitDto, HabitDto newHabitDto) {

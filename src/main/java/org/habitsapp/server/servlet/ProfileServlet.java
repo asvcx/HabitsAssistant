@@ -1,9 +1,8 @@
 package org.habitsapp.server.servlet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.habitsapp.annotations.Measurable;
 import org.habitsapp.server.ApplicationContext;
-import org.habitsapp.client.session.RegistrationResult;
+import org.habitsapp.models.results.RegistrationResult;
 import org.habitsapp.exchange.ProfileChangeDto;
 import org.habitsapp.exchange.ResponseDto;
 import org.habitsapp.models.User;

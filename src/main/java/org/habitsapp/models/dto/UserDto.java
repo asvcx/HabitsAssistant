@@ -1,7 +1,11 @@
 package org.habitsapp.models.dto;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.habitsapp.models.AccessLevel;
 
+@Getter
+@Setter
 public class UserDto implements Cloneable {
     private long id;
     private String name;
@@ -25,42 +29,6 @@ public class UserDto implements Cloneable {
         this.email = email;
         this.password = password;
         this.accessLevel = accessLevel;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public long getID() {
-        return id;
-    }
-
-    public void setID(long id) {
-        this.id = id;
-    }
-
-    public AccessLevel getAccessLevel() {
-        return this.accessLevel;
     }
 
     @Override

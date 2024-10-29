@@ -1,4 +1,4 @@
-package habitsapp.client.out;
+package org.habitsapp.client.out;
 
 import org.habitsapp.client.out.HabitFilter;
 import org.habitsapp.models.Habit;

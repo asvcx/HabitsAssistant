@@ -1,5 +1,6 @@
 package org.habitsapp.server;
 
+import lombok.Getter;
 import org.habitsapp.client.Main;
 import org.habitsapp.server.repository.Database;
 import org.habitsapp.server.repository.DatabasePostgres;
@@ -11,6 +12,7 @@ import org.habitsapp.server.service.UserService;
 import java.io.IOException;
 import java.util.Properties;
 
+@Getter
 public class ApplicationContext {
     private final UserService userService;
     private final HabitService habitService;
@@ -49,19 +51,4 @@ public class ApplicationContext {
         return instance;
     }
 
-    public UserService getUserService() {
-        return userService;
-    }
-
-    public HabitService getHabitService() {
-        return habitService;
-    }
-
-    public Repository getRepository() {
-        return repository;
-    }
-
-    public Database getDatabase() {
-        return  database;
-    }
 }
