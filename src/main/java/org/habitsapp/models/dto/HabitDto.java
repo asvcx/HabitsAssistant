@@ -8,7 +8,7 @@ import java.util.TreeSet;
 
 @Getter
 @Setter
-public class HabitDto {
+public class HabitDto implements Cloneable {
     private int id;
     private String title;
     private String description;

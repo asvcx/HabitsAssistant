@@ -106,15 +106,11 @@ public class UserService {
             || !repository.isUserExists(emailToManage)) {
             return false;
         }
-        if (!repository.isUserExists(emailToManage)) {
-            return false;
-        }
         User user = repository.getUserByEmail(emailToManage).get();
         User admin = adminOpt.get();
         if (!email.equals(admin.getEmail())) {
             return false;
         }
-
         return switch (profileAction) {
             case Repository.ProfileAction.BLOCK -> {
                 if (!user.isBlocked() && user.getAccountStatus() != EntityStatus.DELETED) {
@@ -158,7 +154,7 @@ public class UserService {
 
     public boolean editUserPassword(String email, String token, String oldPassword, String newPassword) {
         if (!repository.checkPassword(email, oldPassword)
-                || repository.checkToken(email, token)) {
+                || !repository.checkToken(email, token)) {
             return false;
         }
         Optional<User> user = repository.getUserByEmail(email.toLowerCase());

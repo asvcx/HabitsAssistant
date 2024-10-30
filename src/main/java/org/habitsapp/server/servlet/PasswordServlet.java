@@ -1,10 +1,9 @@
 package org.habitsapp.server.servlet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.habitsapp.annotations.Measurable;
 import org.habitsapp.server.ApplicationContext;
 import org.habitsapp.exchange.PasswordChangeDto;
-import org.habitsapp.exchange.ResponseDto;
+import org.habitsapp.exchange.MessageDto;
 import org.habitsapp.models.User;
 import org.habitsapp.server.repository.Repository;
 import org.habitsapp.server.service.UserService;
@@ -23,6 +22,7 @@ public class PasswordServlet extends HttpServlet {
     ApplicationContext appContext;
     UserService userService;
     Repository repository;
+    DtoReader dtoReader;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -30,31 +30,19 @@ public class PasswordServlet extends HttpServlet {
         appContext = (ApplicationContext) getServletContext().getAttribute("appContext");
         userService = appContext.getUserService();
         repository = appContext.getRepository();
+        dtoReader = new DtoReader();
     }
 
     /**
      *  Change user password
      */
     @Override
-    protected void doPatch(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json");
         ObjectMapper objectMapper = new ObjectMapper();
-        String token = req.getHeader("Authorization");
-        // Check token
-        if (token == null || token.isEmpty()) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("Bad request"));
-        }
-        if (token.startsWith("Token ")) {
-            token = token.substring(6);
-        }
-        // Check dto
-        PasswordChangeDto pswChange;
-        try {
-            pswChange = objectMapper.readValue(req.getInputStream(), PasswordChangeDto.class);
-        } catch (IOException e) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("Incorrect dto format"));
+        String token = dtoReader.readToken(req, resp, repository);
+        PasswordChangeDto pswChange = dtoReader.readPswChangeDto(req, resp);
+        if (token == null || token.isEmpty() || pswChange == null) {
             return;
         }
         // Find user
@@ -65,10 +53,10 @@ public class PasswordServlet extends HttpServlet {
         );
         if (isChanged) {
             resp.setStatus(HttpServletResponse.SC_OK);
-            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("Password changed successfully"));
+            objectMapper.writeValue(resp.getOutputStream(), new MessageDto("Password changed successfully"));
         } else {
-            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("Something gone wrong"));
+            resp.setStatus(HttpServletResponse.SC_CONFLICT);
+            objectMapper.writeValue(resp.getOutputStream(), new MessageDto("Failed to change password"));
         }
     }
 }

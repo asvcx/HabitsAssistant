@@ -14,5 +14,5 @@ public class AuthorizationResult {
     private boolean success;
     private String message;
     private String token;
-    private UserDto userDTO;
+    private UserDto userDto;
 }

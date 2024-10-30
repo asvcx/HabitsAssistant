@@ -4,6 +4,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
+import org.habitsapp.models.dto.UserDto;
 import org.habitsapp.models.results.AuthorizationResult;
 import org.habitsapp.models.results.RegistrationResult;
 import org.slf4j.Logger;
@@ -19,13 +20,13 @@ public class AuditUser {
     public Object auditRegisterUser(ProceedingJoinPoint joinPoint) throws Throwable {
         String methodName = joinPoint.getSignature().getName();
         Object[] args = joinPoint.getArgs();
-        String email = (String) args[0];
+        String email = ((UserDto) args[0]).getEmail();
         Object methodResult = joinPoint.proceed();
         if (methodResult instanceof RegistrationResult result) {
             if (result.isSuccess()) {
-                logger.info("User [{}] has been authorized", email);
+                logger.info("User [{}] has been registered", email);
             } else {
-                logger.info("User [{}] failed to authorize", email);
+                logger.info("User [{}] failed to register", email);
             }
         } else {
             logger.info("Method {} returned an object of type: {}", methodName, methodResult.getClass().getSimpleName());

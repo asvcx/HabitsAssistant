@@ -33,7 +33,7 @@ public class DatabaseTest {
     static final List<User> users = new LinkedList<>() {{
         add(new User(1, "Андрей", "Andrei@mail.ru","",  AccessLevel.USER,  false));
         add(new User(2, "Антон",  "Anton@mail.ru", "",  AccessLevel.USER,  true));
-        add(new User(3, "Реслан", "Ruslan@mail.ru","",  AccessLevel.ADMIN, false));
+        add(new User(3, "Руслан", "Ruslan@mail.ru","",  AccessLevel.ADMIN, false));
         add(new User(4, "Ольга",  "Olga@mail.ru",  "",  AccessLevel.USER,  false));
         add(new User(5, "Таня",   "Tanya@mail.ru", "",  AccessLevel.USER,  true));
         add(new User(6, "Рудольф","Rudolf@mail.ru","",  AccessLevel.USER,  false));

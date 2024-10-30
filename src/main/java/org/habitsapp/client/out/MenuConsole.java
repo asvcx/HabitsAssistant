@@ -169,11 +169,15 @@ public class MenuConsole implements Menu {
                     _ -> {},
                     "Пароль должен содержать не менее 6 символов"
             );
-            if (request.editUserPassword(Session.getEmail(), Session.getToken(), oldPassword, newPassword.get())) {
-                Session.getProfile().setPassword(newPassword.get());
+            if (newPassword.isPresent()) {
+                if (request.editUserPassword(Session.getEmail(), Session.getToken(), oldPassword, newPassword.get())) {
+                    Session.getProfile().setPassword(newPassword.get());
+                } else {
+                    System.out.println("Не удалось изменить данные");
+                }
             } else {
-                System.out.println("Не удалось изменить данные");
-            };
+                System.out.println("Недопустимый пароль");
+            }
         });
         options.put("0. Назад", () -> {});
 

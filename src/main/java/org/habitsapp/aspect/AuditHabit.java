@@ -4,6 +4,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
+import org.habitsapp.models.Habit;
 import org.habitsapp.models.results.HabitCreationResult;
 import org.habitsapp.models.dto.HabitDto;
 import org.slf4j.Logger;
@@ -41,7 +42,7 @@ public class AuditHabit {
         String methodName = joinPoint.getSignature().getName();
         Object[] args = joinPoint.getArgs();
         String email = (String) args[0];
-        String habitTitle = ((HabitDto) args[2]).getTitle();
+        String habitTitle = ((Habit) args[3]).getTitle();
         Object methodResult = joinPoint.proceed();
         if (methodResult instanceof Boolean result) {
             if (result) {
@@ -62,7 +63,7 @@ public class AuditHabit {
         String methodName = joinPoint.getSignature().getName();
         Object[] args = joinPoint.getArgs();
         String email = (String) args[0];
-        String habitTitle = ((HabitDto) args[2]).getTitle();
+        String habitTitle = (String) args[2];
         Object methodResult = joinPoint.proceed();
         if (methodResult instanceof Boolean result) {
             if (result) {

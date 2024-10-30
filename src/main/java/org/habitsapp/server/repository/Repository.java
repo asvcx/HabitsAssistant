@@ -18,9 +18,7 @@ public class Repository {
     private static final Map<Long,User> userByID = new HashMap<>();
     private static final Map<String,User> userByToken = new HashMap<>();
 
-    public Repository() {
-
-    }
+    public Repository() {}
 
     public boolean isUserExists(String email) {
         if (!userByEmail.containsKey(email.toLowerCase())) {
@@ -66,7 +64,6 @@ public class Repository {
 
     public boolean replaceUser(String email, String token, User changedUser) {
         if (!isUserExists(email.toLowerCase())) {
-            System.out.println("User not exists");
             return false;
         }
         User user = userByEmail.get(email);
@@ -160,13 +157,13 @@ public class Repository {
     }
 
     public boolean checkToken(String email, String token) {
-        Optional<User> eUser = getUserByEmail(email);
+        Optional<User> eUser = getUserByEmail(email.toLowerCase());
         Optional<User> tUser = getUserByToken(token);
         return eUser.isPresent() && tUser.isPresent() && email.equals(tUser.get().getEmail());
     }
 
     public boolean checkPassword(String email, String password) {
-        Optional<User> user = getUserByEmail(email);
+        Optional<User> user = getUserByEmail(email.toLowerCase());
         return user.isPresent() && password.equals(user.get().getPassword());
     }
 

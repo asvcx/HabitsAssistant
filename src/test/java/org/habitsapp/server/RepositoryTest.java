@@ -24,12 +24,14 @@ public class RepositoryTest {
     private final User existingUser = new User("ExistingName", "existing@mail.ru", "ExistingPass");
     private final Habit existingHabit = new Habit("ExistingTitle", "ExistingDescription", 1);
 
+    private final String token = "ExistingToken";
+
     @BeforeEach
     void setUp() {
         repository = new Repository();
         repository.loadUser(existingUser);
         repository.loadHabit(existingUser.getEmail(), existingHabit);
-        repository.addToken("ExistingToken", existingUser);
+        repository.addToken(token, existingUser);
     }
 
     @Test
@@ -106,23 +108,24 @@ public class RepositoryTest {
     @DisplayName("Should update the user's email")
     void shouldUpdateUserEmail() {
         // Given
-        User changedUser = existingUser.clone();
-        changedUser.setEmail("newemail@mail.ru");
+        String oldEmail = existingUser.getEmail();
+        String newEmail = "changed@mail.ru";
         assertThat(repository.isUserExists(existingUser.getEmail())).isTrue();
-        assertThat(repository.isUserExists(changedUser.getEmail())).isFalse();
+        assertThat(repository.isUserExists(newEmail)).isFalse();
 
         // When
-        boolean result = userService.editUserData(existingUser.getEmail(), "ExistingToken", "Email", "newemail@mail.ru");
-        assertThat(result).isTrue();
+        boolean isChanged = userService.editUserData(oldEmail, token, newEmail, existingUser.getName());
+        assertThat(isChanged).isTrue();
         // Then
-        assertThat(repository.isUserExists(existingUser.getEmail())).isFalse();
-        assertThat(repository.isUserExists(changedUser.getEmail())).isTrue();
+        assertThat(repository.isUserExists(oldEmail)).isFalse();
+        assertThat(repository.isUserExists(newEmail)).isTrue();
 
         // When
-        userService.editUserData(changedUser.getEmail(), "ExistingToken", "Email", "existing@mail.ru");
+        boolean isUnchanged = userService.editUserData(newEmail, token, oldEmail, existingUser.getName());
+        assertThat(isUnchanged).isTrue();
         // Then
-        assertThat(repository.isUserExists(existingUser.getEmail())).isTrue();
-        assertThat(repository.isUserExists(changedUser.getEmail())).isFalse();
+        assertThat(repository.isUserExists(oldEmail)).isTrue();
+        assertThat(repository.isUserExists(newEmail)).isFalse();
     }
 
     @Test

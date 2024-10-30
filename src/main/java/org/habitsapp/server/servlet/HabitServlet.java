@@ -1,11 +1,11 @@
 package org.habitsapp.server.servlet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.habitsapp.models.results.HabitCreationResult;
 import org.habitsapp.server.ApplicationContext;
 import org.habitsapp.exchange.HabitChangeDto;
-import org.habitsapp.exchange.HabitsListDto;
-import org.habitsapp.exchange.ResponseDto;
+import org.habitsapp.exchange.MessageDto;
 import org.habitsapp.models.Habit;
 import org.habitsapp.models.User;
 import org.habitsapp.models.dto.HabitDto;
@@ -21,9 +21,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @WebServlet("/api/habits")
 public class HabitServlet extends HttpServlet {
@@ -31,36 +31,7 @@ public class HabitServlet extends HttpServlet {
     UserService userService;
     HabitService habitService;
     Repository repository;
-
-    public String readToken(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        String token = req.getHeader("Authorization");
-        if (token == null || !token.startsWith("Token ")) {
-            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("You have not been authorized"));
-            return null;
-        }
-        String tokenValue = token.substring(6);
-        return repository.isUserAuthorized(tokenValue) ? tokenValue : null;
-    }
-
-    public HabitDto readHabitDto(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        HabitDto habitDto;
-        try {
-            habitDto = objectMapper.readValue(req.getInputStream(), HabitDto.class);
-        } catch (IOException e) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("Incorrect habit data format"));
-            return null;
-        }
-        if(habitDto.getTitle() == null || habitDto.getDescription() == null) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("Habit have not been provided"));
-            return null;
-        }
-        return habitDto;
-    }
+    DtoReader dtoReader;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -69,36 +40,37 @@ public class HabitServlet extends HttpServlet {
         userService = appContext.getUserService();
         habitService = appContext.getHabitService();
         repository = appContext.getRepository();
+        dtoReader = new DtoReader();
     }
 
     /**
      *  Get list of habits
      */
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json");
         ObjectMapper objectMapper = new ObjectMapper();
+        JavaTimeModule module = new JavaTimeModule();
+        objectMapper.registerModule(module);
         // Check token
-        String token = readToken(req, resp);
+        String token = dtoReader.readToken(req, resp, repository);
         Optional<User> user = repository.getUserByToken(token);
         if (user.isEmpty()) {
             return;
         }
-        // Get list
-        Set<Habit> habits = repository.getHabitsOfUser(user.get().getEmail());
-        List<HabitDto> habitsDto = habits.stream()
+        // Get list of habits
+        Set<HabitDto> habitsDto = repository.getHabitsOfUser(user.get().getEmail())
+                .stream()
                 .map(HabitMapper.INSTANCE::habitToHabitDto)
-                .toList();
-        HabitsListDto habitsList = new HabitsListDto(habitsDto);
+                .collect(Collectors.toSet());
 
         boolean isAuthorized = repository.isUserAuthorized(token);
-        // Respond
         if(isAuthorized) {
             resp.setStatus(HttpServletResponse.SC_OK);
-            objectMapper.writeValue(resp.getOutputStream(), habitsList);
+            objectMapper.writeValue(resp.getOutputStream(), habitsDto);
         } else {
             resp.setStatus(HttpServletResponse.SC_CONFLICT);
-            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("Failed to return habits list"));
+            objectMapper.writeValue(resp.getOutputStream(), new MessageDto("Failed to return habits list"));
         }
     }
 
@@ -109,19 +81,21 @@ public class HabitServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json");
         ObjectMapper objectMapper = new ObjectMapper();
-        String token = readToken(req, resp);
+        JavaTimeModule module = new JavaTimeModule();
+        objectMapper.registerModule(module);
+        String token = dtoReader.readToken(req, resp, repository);
         Optional<User> user = repository.getUserByToken(token);
-        HabitDto habitDto = readHabitDto(req, resp);
+        HabitDto habitDto = dtoReader.readHabitDto(req, resp);
         if(habitDto == null || user.isEmpty()) {
             return;
         }
         HabitCreationResult result = habitService.createHabit(user.get().getEmail(), token, habitDto);
         if (result.getSuccess()) {
             resp.setStatus(HttpServletResponse.SC_CREATED);
-            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("Habit has been created"));
+            objectMapper.writeValue(resp.getOutputStream(), new MessageDto("Habit has been created"));
         } else {
             resp.setStatus(HttpServletResponse.SC_CONFLICT);
-            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("Failed to create a habit"));
+            objectMapper.writeValue(resp.getOutputStream(), new MessageDto("Failed to create a habit"));
         }
     }
 
@@ -129,36 +103,28 @@ public class HabitServlet extends HttpServlet {
      *  Change existing habit
      */
     @Override
-    protected void doPatch(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json");
         ObjectMapper objectMapper = new ObjectMapper();
-        String token = readToken(req, resp);
-        // Check token
-        if (token == null || token.isEmpty()) {
-            return;
-        }
-        // Check dto
-        HabitChangeDto hbtChange;
-        try {
-            hbtChange = objectMapper.readValue(req.getInputStream(), HabitChangeDto.class);
-        } catch (IOException e) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("Invalid dto format"));
+        JavaTimeModule module = new JavaTimeModule();
+        objectMapper.registerModule(module);
+        String token = dtoReader.readToken(req, resp, repository);
+        HabitChangeDto hbtChange = dtoReader.readHbtChangeDto(req, resp);
+        if (token == null || token.isEmpty() || hbtChange == null) {
             return;
         }
         // Change habit
         Optional<User> user = repository.getUserByToken(token);
         Habit oldHabit = HabitMapper.INSTANCE.habitDtoToHabit(hbtChange.getOldHabit());
         Habit newHabit = HabitMapper.INSTANCE.habitDtoToHabit(hbtChange.getNewHabit());
-        boolean isChanged = habitService.editHabit(
-                user.get().getEmail(), token, oldHabit, newHabit
-        );
+        boolean isChanged = user.isPresent() &&
+                habitService.editHabit(user.get().getEmail(), token, oldHabit, newHabit);
         if (isChanged) {
             resp.setStatus(HttpServletResponse.SC_OK);
-            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("Habit changed successfully"));
+            objectMapper.writeValue(resp.getOutputStream(), new MessageDto("Habit changed successfully"));
         } else {
             resp.setStatus(HttpServletResponse.SC_CONFLICT);
-            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("Something gone wrong"));
+            objectMapper.writeValue(resp.getOutputStream(), new MessageDto("Something gone wrong"));
         }
     }
 
@@ -167,31 +133,29 @@ public class HabitServlet extends HttpServlet {
      */
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        resp.setContentType("application/json");
         ObjectMapper objectMapper = new ObjectMapper();
+        resp.setContentType("application/json");
         // Check token
-        String token = readToken(req, resp);
+        String token = dtoReader.readToken(req, resp, repository);
         if (token == null || token.isEmpty()) {
             return;
         }
         // Check habit title
-        String pathInfo = req.getPathInfo();
-        if (pathInfo == null || pathInfo.length() < 2) {
+        String habitTitle = req.getParameter("title");
+        if (habitTitle == null || habitTitle.isEmpty()) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("Habit title has not been provided"));
+            objectMapper.writeValue(resp.getOutputStream(), new MessageDto("Habit title has not been provided"));
             return;
         }
-        String habitTitle = pathInfo.substring(1);
         Optional<User> user = repository.getUserByToken(token);
-        boolean isDeleted = repository.isUserAuthorized(token)
-                && user.isPresent()
+        boolean isDeleted = user.isPresent()
                 && habitService.deleteHabit(user.get().getEmail(), token, habitTitle);
         if(isDeleted) {
             resp.setStatus(HttpServletResponse.SC_OK);
-            resp.getWriter().write("Habit deleted successfully");
+            objectMapper.writeValue(resp.getOutputStream(), new MessageDto("Habit deleted successfully"));
         } else {
             resp.setStatus(HttpServletResponse.SC_CONFLICT);
-            resp.getWriter().write("Failed to delete the habit");
+            objectMapper.writeValue(resp.getOutputStream(), new MessageDto("Failed to delete the habit"));
         }
     }
 

@@ -1,7 +1,6 @@
 package org.habitsapp.client.in;
 
-import org.habitsapp.client.in.UserInput;
-import org.habitsapp.client.in.UserInputByConsole;
+import org.habitsapp.models.dto.UserDto;
 import org.habitsapp.server.repository.Repository;
 import org.habitsapp.models.Habit;
 import org.habitsapp.models.User;
@@ -15,6 +14,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.Scanner;
+import java.util.Set;
 
 import static org.habitsapp.client.in.UserInputByConsole.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,7 +27,6 @@ public class UserInputTest {
     @BeforeEach
     void setUp() {
         repository = new Repository();
-        UserInput userInput = new UserInputByConsole();
     }
 
     @Test
@@ -91,26 +90,25 @@ public class UserInputTest {
         // Given a user is going to select an existing habit
         Habit habit = new Habit("HabitTitle", "HabitDescription", 1);
         User user = new User("Name", "name@mail.ru", "UserPass");
-        repository.loadUser(user);
-        Session.setProfile(user);
-        repository.loadHabit(user.getEmail(), habit);
-        Session.update();
+        Session.start(user, "UserToken");
+        Session.setHabits(Set.of(habit));
+        // Set up mock scanner for input habit title
         Scanner mockScanner = Mockito.mock(Scanner.class);
         Mockito.when(mockScanner.nextLine())
                 .thenReturn("HabitTitle");
         ((UserInputByConsole) userInput).setCurrentScanner(mockScanner);
 
-        // When
+        // When habit tile entered
         Optional<Habit> habitOpt = userInput.selectHabit();
 
-        // Then
+        // Then habit must be selected
         assertThat(habitOpt.isPresent()).isTrue();
     }
 
     @Test
     @DisplayName("Should get user input and convert it to Instant object")
     void shouldInputDateTimeAndReturnInstant() {
-        // Given
+        // Set up mock scanner for input dates
         Scanner mockScanner = Mockito.mock(Scanner.class);
         Mockito.when(mockScanner.nextLine())
                 .thenReturn("14-07-97")
@@ -118,12 +116,12 @@ public class UserInputTest {
                 .thenReturn("29-05-99");
         ((UserInputByConsole) userInput).setCurrentScanner(mockScanner);
 
-        // When
+        // When dates entered
         Optional<Instant> t1 = userInput.dateTimeInput("Введите дату создания в виде дд-мм-гг.");
         Optional<Instant> t2 = userInput.dateTimeInput("Введите дату создания в виде дд-мм-гг.");
         Optional<Instant> t3 = userInput.dateTimeInput("Введите дату создания в виде дд-мм-гг.");
 
-        // Then
+        // Then they must be converted to Instant
         assertThat (t1.isPresent() || t2.isPresent() || t3.isPresent()).isTrue();
         assertThat(Duration.between(t1.orElseThrow(), t2.orElseThrow()).toHours()).isBetween(23L, 25L);
         assertThat(Duration.between(t2.orElseThrow(), t3.orElseThrow()).toDays()).isBetween(365L, 365*2L);

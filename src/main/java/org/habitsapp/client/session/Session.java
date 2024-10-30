@@ -1,7 +1,5 @@
 package org.habitsapp.client.session;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.habitsapp.models.AccessLevel;
 import org.habitsapp.models.Habit;
 import org.habitsapp.models.User;
@@ -11,7 +9,6 @@ import org.habitsapp.models.dto.UserMapper;
 
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 
 public class Session {
 
@@ -24,18 +21,21 @@ public class Session {
             setProfile(user);
             Session.token = token;
             Request request = new Request();
-            Set<Habit> habits = request.getHabits(getToken()).stream()
-                    .map(HabitMapper.INSTANCE::habitDtoToHabit)
-                    .collect(Collectors.toSet());
+            Set<Habit> habits = request.getHabits(getToken());
             setHabits(habits);
+        }
+    }
+
+    public static void start(User user, String token) {
+        if (user != null) {
+            UserDto userDto = UserMapper.INSTANCE.userToUserDto(user);
+            start(userDto, token);
         }
     }
 
     public static void update() {
         Request request = new Request();
-        Set<Habit> habits = request.getHabits(getToken()).stream()
-                .map(HabitMapper.INSTANCE::habitDtoToHabit)
-                .collect(Collectors.toSet());
+        Set<Habit> habits = request.getHabits(getToken());
         setHabits(habits);
     }
 
@@ -45,6 +45,10 @@ public class Session {
 
     public static void setProfile(User user) {
         currentProfile = UserMapper.INSTANCE.userToUserDto(user);
+    }
+
+    public static Set<Habit> getHabits() {
+        return currentHabits;
     }
 
     public static void setHabits(Set<Habit> habits) {
@@ -67,10 +71,6 @@ public class Session {
         return currentProfile.getName();
     }
 
-    public static Set<Habit> getHabits() {
-        return currentHabits;
-    }
-
     public static String getToken() {
         return token;
     }
@@ -91,7 +91,7 @@ public class Session {
         Request request = new Request();
         request.logout(token);
         currentProfile = null;
-        currentHabits = null;
+        currentHabits = new TreeSet<>();
         System.out.println("Вы вышли из профиля.");
     }
 

@@ -1,9 +1,8 @@
 package org.habitsapp.server.servlet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.habitsapp.annotations.Measurable;
 import org.habitsapp.server.ApplicationContext;
-import org.habitsapp.exchange.ResponseDto;
+import org.habitsapp.exchange.MessageDto;
 import org.habitsapp.server.repository.Repository;
 import org.habitsapp.server.service.UserService;
 import jakarta.servlet.ServletConfig;
@@ -39,7 +38,7 @@ public class LogoutServlet extends HttpServlet {
         String token = req.getHeader("Authorization");
         if (token == null || token.isEmpty()) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("You have not been authorized"));
+            objectMapper.writeValue(resp.getOutputStream(), new MessageDto("You have not been authorized"));
             return;
         }
         if (token.startsWith("Token ")) {
@@ -48,15 +47,15 @@ public class LogoutServlet extends HttpServlet {
         // Check authorization
         if (!repository.isUserAuthorized(token)) {
             resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("You have not been authorized"));
+            objectMapper.writeValue(resp.getOutputStream(), new MessageDto("You have not been authorized"));
             return;
         }
         if (userService.logoutUser(token)) {
             resp.setStatus(HttpServletResponse.SC_OK);
-            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("Successfully logged out"));
+            objectMapper.writeValue(resp.getOutputStream(), new MessageDto("Successfully logged out"));
         } else {
             resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("You have not been authorized"));
+            objectMapper.writeValue(resp.getOutputStream(), new MessageDto("You have not been authorized"));
         }
     }
 }

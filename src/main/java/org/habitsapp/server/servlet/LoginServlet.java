@@ -1,7 +1,10 @@
 package org.habitsapp.server.servlet;
 
+import org.habitsapp.exchange.SessionDto;
+import org.habitsapp.models.AccessLevel;
+import org.habitsapp.models.User;
 import org.habitsapp.server.ApplicationContext;
-import org.habitsapp.exchange.ResponseDto;
+import org.habitsapp.exchange.MessageDto;
 import org.habitsapp.models.dto.UserDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.habitsapp.models.results.AuthorizationResult;
@@ -42,17 +45,19 @@ public class LoginServlet extends HttpServlet {
             userDTO = objectMapper.readValue(req.getInputStream(), UserDto.class);
         } catch (IOException e) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto("Incorrect user data format"));
+            objectMapper.writeValue(resp.getOutputStream(), new MessageDto("Incorrect user data format"));
             return;
         }
         AuthorizationResult result = userService.authorizeUser(userDTO.getEmail(), userDTO.getPassword());
         if (result.isSuccess()) {
+            UserDto userDto = result.getUserDto();
             resp.setHeader("Authorization", "Token " + result.getToken());
             resp.setStatus(HttpServletResponse.SC_OK);
-            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto(result.getMessage()));
+            SessionDto sessionDto = new SessionDto(userDto.getName(), userDto.getEmail(), userDto.getAccessLevel());
+            objectMapper.writeValue(resp.getOutputStream(), sessionDto);
         } else {
             resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            objectMapper.writeValue(resp.getOutputStream(), new ResponseDto(result.getMessage()));
+            objectMapper.writeValue(resp.getOutputStream(), new MessageDto(result.getMessage()));
         }
     }
 

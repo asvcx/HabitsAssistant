@@ -1,6 +1,5 @@
 package org.habitsapp.client.in;
 
-import org.habitsapp.client.session.AdminRequest;
 import org.habitsapp.client.session.Request;
 import org.habitsapp.models.results.AuthorizationResult;
 import org.habitsapp.models.results.RegistrationResult;
@@ -28,7 +27,7 @@ public class InputOrder {
         Request request = new Request();
         AuthorizationResult result = request.login(email, password);
         if (result.isSuccess()) {
-            Session.start(result.getUserDTO(), result.getToken());
+            Session.start(result.getUserDto(), result.getToken());
             System.out.printf("Вы вошли как %s%n", Session.getName());
         } else {
             System.out.println("Не удалось войти в аккаунт: " + result.getMessage());
@@ -53,14 +52,14 @@ public class InputOrder {
     }
 
     public List<String> getProfilesList() {
-        AdminRequest request = new AdminRequest();
+        Request request = new Request();
         return request.getProfilesList(Session.getEmail(), Session.getToken());
     }
 
     public void operateProfile(String actionWord, Repository.ProfileAction action) {
         System.out.printf("Введите электронную почту пользователя, которого требуется %s.%n", actionWord);
         String emailToRemove = currentScanner.nextLine();
-        AdminRequest request = new AdminRequest();
+        Request request = new Request();
         boolean success = request.manageUserProfile(Session.getEmail(), Session.getToken(), emailToRemove, action);
         if (success) {
             System.out.printf("Действие выполнено успешно (%s пользователя %s) ().%n", actionWord, emailToRemove);
@@ -110,7 +109,7 @@ public class InputOrder {
         }
         HabitDto habitDto = HabitMapper.INSTANCE.habitToHabitDto(habitOpt.get());
         Request request = new Request();
-        boolean result = request.deleteHabit(Session.getToken(),habitDto);
+        boolean result = request.deleteHabit(Session.getToken(), habitDto);
         System.out.printf("Привычка (%s) удалена%n", habitDto.getTitle());
         return result;
     }
