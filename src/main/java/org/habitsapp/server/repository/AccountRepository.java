@@ -1,24 +1,39 @@
 package org.habitsapp.server.repository;
 
+import jakarta.annotation.PreDestroy;
 import org.habitsapp.models.EntityStatus;
 import org.habitsapp.models.Habit;
 import org.habitsapp.models.User;
-
+import org.springframework.stereotype.Repository;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class Repository {
+@Repository("accountRepository")
+public class AccountRepository {
+    private final Database database;
     public enum ProfileAction {
-        BLOCK,
-        UNBLOCK,
-        DELETE
+        BLOCK, UNBLOCK, DELETE
     }
     private static final Map<User,TreeSet<Habit>> habitsOfUser = new HashMap<>();
     private static final Map<String,User> userByEmail = new HashMap<>();
     private static final Map<Long,User> userByID = new HashMap<>();
     private static final Map<String,User> userByToken = new HashMap<>();
 
-    public Repository() {}
+    public AccountRepository(Database database) {
+        this.database = database;
+        // Load users from database
+        List<User> users = database.loadUsers();
+        for (User user : users) {
+            System.out.println(user);
+            loadUser(user);
+        }
+        // Load habits from database
+        Map<Long,List<Habit>> habitsByID = database.loadHabits();
+        for (long userID : habitsByID.keySet()) {
+            List<Habit> userHabits = habitsByID.get(userID);
+            setHabits(userID, userHabits);
+        }
+    }
 
     public boolean isUserExists(String email) {
         if (!userByEmail.containsKey(email.toLowerCase())) {
@@ -204,5 +219,26 @@ public class Repository {
         return new LinkedList<>(habitsOfUser.keySet());
     }
 
+    @PreDestroy
+    public void release() {
+        // Save new users
+        List<User> createdUsers = getUsersByStatus(EntityStatus.CREATED);
+        database.saveUsers(createdUsers);
 
+        // Save users with changed profile attributes
+        List<User> updatedUsers = getUsersByStatus(EntityStatus.UPDATED);
+        database.updateUsers(updatedUsers);
+
+        // Perform saving, updating and deleting habits
+        List<User> users = getUsers();
+        for (User user : users) {
+            List<Habit> habits = new LinkedList<>(getHabitsOfUser(user.getEmail()));
+            database.saveHabits(user.getId(), habits);
+            database.updateHabits(user.getId(), habits);
+            database.removeHabits(user.getId(), habits);
+        }
+        // Remove users which was marked as deleted
+        List<User> deletedUsers = getUsersByStatus(EntityStatus.DELETED);
+        database.removeUsers(deletedUsers);
+    }
 }

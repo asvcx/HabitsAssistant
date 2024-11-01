@@ -9,8 +9,7 @@ import org.habitsapp.models.dto.HabitDto;
 import org.habitsapp.models.dto.HabitMapper;
 import org.habitsapp.models.dto.UserDto;
 
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -20,7 +19,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.habitsapp.models.results.AuthorizationResult;
 import org.habitsapp.models.results.RegistrationResult;
-import org.habitsapp.server.repository.Repository;
+import org.habitsapp.server.repository.AccountRepository;
 
 import static java.net.HttpURLConnection.*;
 
@@ -91,7 +90,7 @@ public class Request {
         return result;
     }
 
-    public boolean manageUserProfile(String email, String token, String emailToManage, Repository.ProfileAction action) {
+    public boolean manageUserProfile(String email, String token, String emailToManage, AccountRepository.ProfileAction action) {
         String path = baseUrl + "/admin";
         ObjectMapper objectMapper = new ObjectMapper();
         JavaTimeModule module = new JavaTimeModule();
@@ -128,6 +127,7 @@ public class Request {
         try {
             HttpURLConnection connection = createConnection(path, "POST", null, json);
             int responseCode = connection.getResponseCode();
+
             if (responseCode == HTTP_OK) {
                 String token = connection.getHeaderField("Authorization");
                 if (token.startsWith("Token ")) {
@@ -138,8 +138,8 @@ public class Request {
                 userDto.setName(response.getUserName());
                 result = new AuthorizationResult(true, "", token, userDto);
             } else {
-                MessageDto response = objectMapper.readValue(connection.getErrorStream(), MessageDto.class);
-                result = new AuthorizationResult(false, response.getMessage(), null, null);
+                String msg = String.format("Ошибка %s", responseCode);
+                result = new AuthorizationResult(false, msg, null, null);
             }
             connection.disconnect();
         } catch (IOException e) {

@@ -1,10 +1,11 @@
 package org.habitsapp.client.in;
 
-import org.habitsapp.models.dto.UserDto;
-import org.habitsapp.server.repository.Repository;
+import org.habitsapp.server.migration.DatabaseConfig;
+import org.habitsapp.server.repository.AccountRepository;
 import org.habitsapp.models.Habit;
 import org.habitsapp.models.User;
 import org.habitsapp.client.session.Session;
+import org.habitsapp.server.repository.DatabasePostgres;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,17 +17,18 @@ import java.util.Optional;
 import java.util.Scanner;
 import java.util.Set;
 
-import static org.habitsapp.client.in.UserInputByConsole.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.habitsapp.client.in.UserInput.isDateValid;
+import static org.habitsapp.client.in.UserInput.isEmailValid;
 
 public class UserInputTest {
 
-    Repository repository = new Repository();
-    private UserInput userInput = new UserInputByConsole();
+    AccountRepository repository;
+    private final UserInput userInput = new UserInputByConsole();
 
     @BeforeEach
     void setUp() {
-        repository = new Repository();
+        repository = new AccountRepository(new DatabasePostgres(new DatabaseConfig()));
     }
 
     @Test

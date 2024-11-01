@@ -4,17 +4,19 @@ import org.habitsapp.client.in.UserInput;
 import org.habitsapp.client.in.UserInputByConsole;
 import org.habitsapp.models.Habit;
 import org.habitsapp.models.User;
-import org.habitsapp.server.repository.Repository;
+import org.habitsapp.server.migration.DatabaseConfig;
+import org.habitsapp.server.repository.AccountRepository;
 import org.habitsapp.models.results.AuthorizationResult;
+import org.habitsapp.server.repository.DatabasePostgres;
 import org.habitsapp.server.service.HabitService;
 import org.habitsapp.server.service.UserService;
 import org.junit.jupiter.api.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class RepositoryTest {
+public class AccountRepositoryTest {
 
-    Repository repository = new Repository();
+    AccountRepository repository;
     private UserInput userInput = new UserInputByConsole();
     private UserService userService = new UserService(repository);
     private HabitService habitService = new HabitService(repository);
@@ -28,7 +30,7 @@ public class RepositoryTest {
 
     @BeforeEach
     void setUp() {
-        repository = new Repository();
+        repository = new AccountRepository(new DatabasePostgres(new DatabaseConfig()));
         repository.loadUser(existingUser);
         repository.loadHabit(existingUser.getEmail(), existingHabit);
         repository.addToken(token, existingUser);

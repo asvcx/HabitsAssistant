@@ -1,14 +1,14 @@
 package org.habitsapp.client.in;
 
 import org.habitsapp.client.session.Request;
+import org.habitsapp.client.session.Session;
 import org.habitsapp.models.results.AuthorizationResult;
 import org.habitsapp.models.results.RegistrationResult;
 import org.habitsapp.models.dto.HabitDto;
 import org.habitsapp.models.Habit;
 import org.habitsapp.models.dto.HabitMapper;
 import org.habitsapp.models.dto.UserDto;
-import org.habitsapp.server.repository.Repository;
-import org.habitsapp.client.session.Session;
+import org.habitsapp.server.repository.AccountRepository;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -56,7 +56,7 @@ public class InputOrder {
         return request.getProfilesList(Session.getEmail(), Session.getToken());
     }
 
-    public void operateProfile(String actionWord, Repository.ProfileAction action) {
+    public void operateProfile(String actionWord, AccountRepository.ProfileAction action) {
         System.out.printf("Введите электронную почту пользователя, которого требуется %s.%n", actionWord);
         String emailToRemove = currentScanner.nextLine();
         Request request = new Request();

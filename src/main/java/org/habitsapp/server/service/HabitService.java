@@ -5,15 +5,19 @@ import org.habitsapp.models.EntityStatus;
 import org.habitsapp.models.Habit;
 import org.habitsapp.models.dto.HabitDto;
 import org.habitsapp.models.User;
-import org.habitsapp.server.repository.Repository;
+import org.habitsapp.server.repository.AccountRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 import java.util.Set;
 
+@Service
 public class HabitService {
-    private final Repository repository;
+    private final AccountRepository repository;
 
-    public HabitService(Repository repository) {
+    @Autowired
+    public HabitService(AccountRepository repository) {
         this.repository = repository;
     }
 

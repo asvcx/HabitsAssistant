@@ -1,14 +1,14 @@
 package org.habitsapp.client.out;
 
 import org.habitsapp.client.in.UserInput;
-import org.habitsapp.client.in.UserInputByConsole;
 import org.habitsapp.client.session.Request;
+import org.habitsapp.client.session.Session;
+import org.habitsapp.client.in.UserInputByConsole;
 import org.habitsapp.models.Habit;
 import org.habitsapp.client.in.InputOrder;
-import org.habitsapp.client.session.Session;
 import org.habitsapp.models.dto.HabitDto;
 import org.habitsapp.models.dto.HabitMapper;
-import org.habitsapp.server.repository.Repository;
+import org.habitsapp.server.repository.AccountRepository;
 
 import java.time.*;
 import java.util.*;
@@ -224,11 +224,11 @@ public class MenuConsole implements Menu {
         Map<String, Runnable> options = new LinkedHashMap<>();
         options.put("1. Вывести список пользователей", () -> inputOrder.getProfilesList().forEach(System.out::println));
         options.put("2. Заблокировать пользователя",
-                () -> inputOrder.operateProfile("заблокировать", Repository.ProfileAction.BLOCK));
+                () -> inputOrder.operateProfile("заблокировать", AccountRepository.ProfileAction.BLOCK));
         options.put("3. Разблокировать пользователя",
-                () -> inputOrder.operateProfile("разблокировать", Repository.ProfileAction.UNBLOCK));
+                () -> inputOrder.operateProfile("разблокировать", AccountRepository.ProfileAction.UNBLOCK));
         options.put("4. Удалить пользователя",
-                () -> inputOrder.operateProfile("удалить", Repository.ProfileAction.DELETE));
+                () -> inputOrder.operateProfile("удалить", AccountRepository.ProfileAction.DELETE));
         options.put("0. Назад", () -> {});
         Supplier<Boolean> continueCondition = Session::isAuthorized;
         displayMenu(options, continueCondition, () -> {});

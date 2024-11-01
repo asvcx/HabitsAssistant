@@ -5,8 +5,10 @@ import org.habitsapp.models.results.RegistrationResult;
 import org.habitsapp.models.AccessLevel;
 import org.habitsapp.models.User;
 import org.habitsapp.models.dto.UserDto;
-import org.habitsapp.server.repository.Repository;
+import org.habitsapp.server.repository.AccountRepository;
 import org.habitsapp.models.EntityStatus;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
 import java.util.*;
@@ -14,10 +16,12 @@ import java.util.*;
 import static org.habitsapp.client.in.UserInput.isEmailValid;
 import static org.habitsapp.client.in.UserInput.isNameValid;
 
+@Service
 public class UserService {
-    private final Repository repository;
+    private final AccountRepository repository;
 
-    public UserService(Repository repository) {
+    @Autowired
+    public UserService(AccountRepository repository) {
         this.repository = repository;
     }
 
@@ -100,7 +104,7 @@ public class UserService {
                 .toList();
     }
 
-    public boolean manageUserProfile(String email, String token, String emailToManage, Repository.ProfileAction profileAction) {
+    public boolean manageUserProfile(String email, String token, String emailToManage, AccountRepository.ProfileAction profileAction) {
         Optional<User> adminOpt = repository.getUserByToken(token);
         if (adminOpt.isEmpty() || adminOpt.get().getAccessLevel() != AccessLevel.ADMIN
             || !repository.isUserExists(emailToManage)) {
@@ -112,7 +116,7 @@ public class UserService {
             return false;
         }
         return switch (profileAction) {
-            case Repository.ProfileAction.BLOCK -> {
+            case AccountRepository.ProfileAction.BLOCK -> {
                 if (!user.isBlocked() && user.getAccountStatus() != EntityStatus.DELETED) {
                     user.block();
                     user.setAccountStatus(EntityStatus.UPDATED);
@@ -120,7 +124,7 @@ public class UserService {
                 }
                 yield false;
             }
-            case Repository.ProfileAction.UNBLOCK -> {
+            case AccountRepository.ProfileAction.UNBLOCK -> {
                 if (user.isBlocked()) {
                     user.unblock();
                     user.setAccountStatus(EntityStatus.UPDATED);
@@ -128,7 +132,7 @@ public class UserService {
                 }
                 yield false;
             }
-            case Repository.ProfileAction.DELETE -> {
+            case AccountRepository.ProfileAction.DELETE -> {
                 user.setAccountStatus(EntityStatus.DELETED);
                 yield true;
             }

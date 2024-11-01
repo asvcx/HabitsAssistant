@@ -1,7 +1,7 @@
 package org.habitsapp.client.in;
 
-import org.habitsapp.models.Habit;
 import org.habitsapp.client.session.Session;
+import org.habitsapp.models.Habit;
 
 import java.time.Instant;
 import java.time.ZonedDateTime;

@@ -1,6 +1,5 @@
 package org.habitsapp.client.session;
 
-import org.habitsapp.client.session.Session;
 import org.habitsapp.models.AccessLevel;
 import org.habitsapp.models.dto.UserDto;
 import org.junit.jupiter.api.BeforeEach;

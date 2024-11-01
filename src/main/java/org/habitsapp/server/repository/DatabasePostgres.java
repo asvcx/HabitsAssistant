@@ -3,11 +3,14 @@ package org.habitsapp.server.repository;
 import org.habitsapp.models.EntityStatus;
 import org.habitsapp.models.Habit;
 import org.habitsapp.models.User;
+import org.habitsapp.server.migration.DatabaseConfig;
 import org.habitsapp.server.repository.dbmappers.DBHabitMapper;
 import org.habitsapp.server.repository.dbmappers.ResultSetMapper;
 import org.habitsapp.server.repository.dbmappers.DBUserMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.sql.*;
 import java.time.Instant;
@@ -17,6 +20,7 @@ import java.util.*;
  * The Database class provides methods for interacting with the database,
  * including loading, saving, updating, and deleting user and habit data.
  */
+@Component
 public class DatabasePostgres implements Database {
     private static final Logger logger = LoggerFactory.getLogger(DatabasePostgres.class);
 
@@ -28,17 +32,26 @@ public class DatabasePostgres implements Database {
     private final String TBL_HABITS_NAME;
     private final String TBL_DATES_NAME;
 
+    static {
+        try {
+            Class.forName("org.postgresql.Driver");
+        } catch (ClassNotFoundException e) {
+            throw new ExceptionInInitializerError("Failed to load PostgreSQL driver: " + e.getMessage());
+        }
+    }
+
     /**
      * Create a Database instance with the specified connection parameters.
      */
-    public DatabasePostgres(Properties properties) {
-        DB_URL = properties.getProperty("db.url");
-        DB_USER_NAME = properties.getProperty("db.username");
-        DB_PASSWORD = properties.getProperty("db.password");
-        SCHEMA_NAME = properties.getProperty("schema.main.name");
-        TBL_USERS_NAME = properties.getProperty("table.users_name");
-        TBL_HABITS_NAME = properties.getProperty("table.habits_name");
-        TBL_DATES_NAME = properties.getProperty("table.dates_name");
+    @Autowired
+    public DatabasePostgres(DatabaseConfig dbConfig) {
+        DB_URL = dbConfig.getUrl();
+        DB_USER_NAME = dbConfig.getUsername();
+        DB_PASSWORD = dbConfig.getPassword();
+        SCHEMA_NAME = dbConfig.getSchemaName();
+        TBL_USERS_NAME = dbConfig.getTblUsersName();
+        TBL_HABITS_NAME = dbConfig.getTblHabitsName();
+        TBL_DATES_NAME = dbConfig.getTblDatesName();
     }
 
     private void handleSQLException(SQLException e) {

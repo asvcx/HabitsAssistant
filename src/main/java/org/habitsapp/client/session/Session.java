@@ -3,7 +3,6 @@ package org.habitsapp.client.session;
 import org.habitsapp.models.AccessLevel;
 import org.habitsapp.models.Habit;
 import org.habitsapp.models.User;
-import org.habitsapp.models.dto.HabitMapper;
 import org.habitsapp.models.dto.UserDto;
 import org.habitsapp.models.dto.UserMapper;
 

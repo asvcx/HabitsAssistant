@@ -4,6 +4,7 @@ import org.habitsapp.models.AccessLevel;
 import org.habitsapp.models.EntityStatus;
 import org.habitsapp.models.User;
 import org.habitsapp.models.Habit;
+import org.habitsapp.server.migration.DatabaseConfig;
 import org.habitsapp.server.repository.Database;
 import org.habitsapp.server.repository.DatabasePostgres;
 import org.habitsapp.server.migration.Migration;
@@ -49,17 +50,18 @@ public class DatabaseTest {
         users.forEach(u -> u.setAccountStatus(EntityStatus.CREATED));
         habits.forEach(h -> h.setStatus(EntityStatus.CREATED));
         Properties dbProperties = new Properties();
-        dbProperties.setProperty("db.url", postgresContainer.getJdbcUrl());
-        dbProperties.setProperty("db.username", "testPostgres");
-        dbProperties.setProperty("db.password", "testPassword");
+        DatabaseConfig dbConfig = new DatabaseConfig();
+        dbConfig.setUrl(postgresContainer.getJdbcUrl());
+        dbConfig.setUsername("testPostgres");
+        dbConfig.setPassword("testPassword");
 
-        dbProperties.setProperty("schema.main.name", "habits_model_schema");
-        dbProperties.setProperty("table.users_name", "users");
-        dbProperties.setProperty("table.habits_name", "habits");
-        dbProperties.setProperty("table.dates_name", "completion_dates");
+        dbConfig.setSchemaName("habits_model_schema");
+        dbConfig.setTblUsersName("users");
+        dbConfig.setTblHabitsName("habits");
+        dbConfig.setTblDatesName("completion_dates");
 
         Migration.migrate(dbProperties);
-        database = new DatabasePostgres(dbProperties);
+        database = new DatabasePostgres(dbConfig);
     }
 
     @Test

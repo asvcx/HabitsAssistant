@@ -1,7 +1,7 @@
 package org.habitsapp.client.out;
 
-import org.habitsapp.models.Habit;
 import org.habitsapp.client.session.Session;
+import org.habitsapp.models.Habit;
 
 import java.time.Duration;
 import java.time.Instant;
