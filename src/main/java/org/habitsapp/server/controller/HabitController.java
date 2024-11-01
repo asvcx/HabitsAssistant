@@ -20,7 +20,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/habit")
+@RequestMapping("/api/habits")
 public class HabitController {
     UserService userService;
     HabitService habitService;

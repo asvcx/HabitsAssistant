@@ -9,8 +9,10 @@ import org.habitsapp.models.results.HabitCreationResult;
 import org.habitsapp.models.dto.HabitDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 @Aspect
+@Component
 public class AuditHabit {
     private static final Logger logger = LoggerFactory.getLogger(AuditHabit.class);
 

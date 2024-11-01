@@ -1,7 +1,5 @@
 package org.habitsapp.server;
 
-import org.habitsapp.client.in.UserInput;
-import org.habitsapp.client.in.UserInputByConsole;
 import org.habitsapp.models.Habit;
 import org.habitsapp.models.User;
 import org.habitsapp.server.migration.DatabaseConfig;
@@ -17,9 +15,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class AccountRepositoryTest {
 
     AccountRepository repository;
-    private UserInput userInput = new UserInputByConsole();
-    private UserService userService = new UserService(repository);
-    private HabitService habitService = new HabitService(repository);
+    private UserService userService;
+    private HabitService habitService;
 
     private final User user = new User("Name", "name@mail.ru", "UserPass");
     private final Habit habit = new Habit("Title", "Description", 1);
@@ -34,6 +31,8 @@ public class AccountRepositoryTest {
         repository.loadUser(existingUser);
         repository.loadHabit(existingUser.getEmail(), existingHabit);
         repository.addToken(token, existingUser);
+        userService = new UserService(repository);
+        habitService = new HabitService(repository);
     }
 
     @Test

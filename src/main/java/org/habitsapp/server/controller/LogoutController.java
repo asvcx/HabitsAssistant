@@ -34,12 +34,11 @@ public class LogoutController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new MessageDto("You have not been authorized"));
         }
-        // Try to logout
         if (userService.logoutUser(token)) {
             return ResponseEntity.ok()
                     .body(new MessageDto("Successfully logged out"));
         } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(new MessageDto("You have not been authorized"));
         }
     }

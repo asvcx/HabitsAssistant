@@ -49,19 +49,19 @@ public class DatabaseTest {
         postgresContainer.start();
         users.forEach(u -> u.setAccountStatus(EntityStatus.CREATED));
         habits.forEach(h -> h.setStatus(EntityStatus.CREATED));
-        Properties dbProperties = new Properties();
-        DatabaseConfig dbConfig = new DatabaseConfig();
-        dbConfig.setUrl(postgresContainer.getJdbcUrl());
-        dbConfig.setUsername("testPostgres");
-        dbConfig.setPassword("testPassword");
 
-        dbConfig.setSchemaName("habits_model_schema");
-        dbConfig.setTblUsersName("users");
-        dbConfig.setTblHabitsName("habits");
-        dbConfig.setTblDatesName("completion_dates");
+        DatabaseConfig config = new DatabaseConfig();
 
-        Migration.migrate(dbProperties);
-        database = new DatabasePostgres(dbConfig);
+        config.setUrl(postgresContainer.getJdbcUrl());
+        config.setUsername("testPostgres");
+        config.setPassword("testPassword");
+        config.setSchemaName("habits_model_schema");
+        config.setTblUsersName("users");
+        config.setTblHabitsName("habits");
+        config.setTblDatesName("completion_dates");
+
+        new Migration(config) ;
+        database = new DatabasePostgres(config);
     }
 
     @Test

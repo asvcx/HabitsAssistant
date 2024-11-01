@@ -4,11 +4,13 @@ import jakarta.annotation.PreDestroy;
 import org.habitsapp.models.EntityStatus;
 import org.habitsapp.models.Habit;
 import org.habitsapp.models.User;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Repository;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Repository("accountRepository")
+@Repository
+@DependsOn("migration")
 public class AccountRepository {
     private final Database database;
     public enum ProfileAction {

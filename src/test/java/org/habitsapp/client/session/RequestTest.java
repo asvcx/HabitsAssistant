@@ -1,15 +1,14 @@
-package org.habitsapp.server;
+package org.habitsapp.client.session;
 
 import org.habitsapp.models.dto.HabitDto;
 import org.habitsapp.models.results.AuthorizationResult;
-import org.habitsapp.client.session.Request;
 import org.habitsapp.models.results.RegistrationResult;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class ServletTest {
+public class RequestTest {
 
     @Test
     @DisplayName("Try to login with incorrect data, then with correct data, finally logout")

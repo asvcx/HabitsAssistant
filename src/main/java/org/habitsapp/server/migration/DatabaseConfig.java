@@ -37,6 +37,6 @@ public class DatabaseConfig {
         } catch (Exception e) {
             throw new RuntimeException("Failed to load database configuration", e);
         }
-
     }
+
 }
