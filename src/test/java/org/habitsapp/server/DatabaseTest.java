@@ -71,7 +71,9 @@ public class DatabaseTest {
         List<User> defaultUsers = database.loadUsers();
         int userCount = users.size() + defaultUsers.size();
         // When
-        database.saveUsers(users);
+        for (User user : users) {
+            database.saveUser(user);
+        }
         List<User> loadedUsers = database.loadUsers();
         // Then
         assertThat(loadedUsers.size()).isEqualTo(userCount);
@@ -88,7 +90,9 @@ public class DatabaseTest {
         int habitCount = habits.size() + defaultHabits.size();
 
         // When
-        database.saveHabits(1L, habits);
+        for (Habit habit : habits) {
+            database.saveHabit(1L, habit);
+        }
         List<Habit> loadedHabits = database.loadHabits().values()
                 .stream()
                 .flatMap(List::stream)

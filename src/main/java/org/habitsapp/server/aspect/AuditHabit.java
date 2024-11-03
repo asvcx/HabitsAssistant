@@ -26,7 +26,7 @@ public class AuditHabit {
         String habitTitle = ((HabitDto) args[2]).getTitle();
         Object methodResult = joinPoint.proceed();
         if (methodResult instanceof HabitCreationResult result) {
-            if (result.getSuccess()) {
+            if (result.isSuccess()) {
                 logger.info("User [{}] has created a new habit [{}]", email, habitTitle);
             } else {
                 logger.info("User [{}] failed to create a new habit [{}]", email, habitTitle);

@@ -7,6 +7,7 @@ import org.habitsapp.models.User;
 import org.habitsapp.models.dto.UserDto;
 import org.habitsapp.server.repository.AccountRepository;
 import org.habitsapp.models.EntityStatus;
+import org.habitsapp.server.repository.Database;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -106,36 +107,30 @@ public class UserService {
 
     public boolean manageUserProfile(String email, String token, String emailToManage, AccountRepository.ProfileAction profileAction) {
         Optional<User> adminOpt = repository.getUserByToken(token);
-        if (adminOpt.isEmpty() || adminOpt.get().getAccessLevel() != AccessLevel.ADMIN
-            || !repository.isUserExists(emailToManage)) {
+        Optional<User> userOpt = repository.getUserByEmail(emailToManage);
+        if (adminOpt.isEmpty() || userOpt.isEmpty()
+            || adminOpt.get().getAccessLevel() != AccessLevel.ADMIN) {
             return false;
         }
-        User user = repository.getUserByEmail(emailToManage).get();
+        User user = userOpt.get();
         User admin = adminOpt.get();
         if (!email.equals(admin.getEmail())) {
             return false;
         }
         return switch (profileAction) {
             case AccountRepository.ProfileAction.BLOCK -> {
-                if (!user.isBlocked() && user.getAccountStatus() != EntityStatus.DELETED) {
-                    user.block();
-                    user.setAccountStatus(EntityStatus.UPDATED);
-                    yield true;
+                if (!user.isBlocked()) {
+                    yield repository.updateUser(emailToManage, User::block);
                 }
                 yield false;
             }
             case AccountRepository.ProfileAction.UNBLOCK -> {
                 if (user.isBlocked()) {
-                    user.unblock();
-                    user.setAccountStatus(EntityStatus.UPDATED);
-                    yield true;
+                    yield repository.updateUser(emailToManage, User::unblock);
                 }
                 yield false;
             }
-            case AccountRepository.ProfileAction.DELETE -> {
-                user.setAccountStatus(EntityStatus.DELETED);
-                yield true;
-            }
+            case AccountRepository.ProfileAction.DELETE -> repository.deleteUser(emailToManage, "");
         };
     }
 

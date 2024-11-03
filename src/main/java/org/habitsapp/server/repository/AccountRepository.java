@@ -1,12 +1,12 @@
 package org.habitsapp.server.repository;
 
-import jakarta.annotation.PreDestroy;
 import org.habitsapp.models.EntityStatus;
 import org.habitsapp.models.Habit;
 import org.habitsapp.models.User;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Repository;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Repository
@@ -16,7 +16,7 @@ public class AccountRepository {
     public enum ProfileAction {
         BLOCK, UNBLOCK, DELETE
     }
-    private static final Map<User,TreeSet<Habit>> habitsOfUser = new HashMap<>();
+    private static final Map<User,Map<String,Habit>> habitsOfUser = new HashMap<>();
     private static final Map<String,User> userByEmail = new HashMap<>();
     private static final Map<Long,User> userByID = new HashMap<>();
     private static final Map<String,User> userByToken = new HashMap<>();
@@ -26,7 +26,6 @@ public class AccountRepository {
         // Load users from database
         List<User> users = database.loadUsers();
         for (User user : users) {
-            System.out.println(user);
             loadUser(user);
         }
         // Load habits from database
@@ -63,7 +62,7 @@ public class AccountRepository {
 
     public boolean loadUser(User user) {
         if (!isUserExists(user.getEmail().toLowerCase())) {
-            habitsOfUser.put(user, new TreeSet<>());
+            habitsOfUser.put(user, new LinkedHashMap<>());
             userByEmail.put(user.getEmail().toLowerCase(), user);
             userByID.put(user.getId(), user);
             return true;
@@ -74,37 +73,63 @@ public class AccountRepository {
     public boolean createUser(User user) {
         if (loadUser(user)) {
             user.setAccountStatus(EntityStatus.CREATED);
+            database.saveUser(user);
             return true;
         }
         return false;
     }
 
     public boolean replaceUser(String email, String token, User changedUser) {
-        if (!isUserExists(email.toLowerCase())) {
+        if (!isUserExists(email)) {
             return false;
         }
+        Map<String,Habit> userHabits = getHabitsOfUser(email).orElseGet(LinkedHashMap::new);
         User user = userByEmail.get(email);
         String newEmail = changedUser.getEmail().toLowerCase();
-        Set<Habit> userHabits = getHabitsOfUser(email);
         habitsOfUser.remove(user);
         userByEmail.remove(email);
         userByToken.remove(token);
         userByEmail.put(newEmail, changedUser);
-        habitsOfUser.put(changedUser, (TreeSet<Habit>) userHabits);
+        habitsOfUser.put(changedUser, userHabits);
         userByToken.put(token, user);
-        setHabits(changedUser.getId(), userHabits.stream().toList());
         user.setAccountStatus(EntityStatus.UPDATED);
+        database.updateUser(user);
         return true;
     }
 
+    public boolean stopSession(String token) {
+        if (userByToken.containsKey(token)) {
+            userByToken.remove(token);
+            return true;
+        }
+        return false;
+    }
+
     public boolean deleteUser(String email, String token) {
-        if (!isUserExists(email)) {
+        Optional<User> userOpt = getUserByEmail(email);
+        stopSession(token);
+        if (userOpt.isEmpty()) {
             return false;
         }
-        User user = userByEmail.get(email);
-        userByToken.remove(token);
+        User user = userOpt.get();
         user.setAccountStatus(EntityStatus.DELETED);
+        Map<String,Habit> habits = getHabitsOfUser(user.getEmail()).orElseGet(LinkedHashMap::new);
+        for (Habit habit : habits.values()) {
+            database.removeHabit(user.getId() , habit);
+        };
+        database.removeUser(user);
         return true;
+    }
+
+    public boolean updateUser(String email, Consumer<User> userAction) {
+        Optional<User> user = getUserByEmail(email);
+        if (user.isPresent() && userAction != null) {
+            userAction.accept(user.get());
+            user.get().setAccountStatus(EntityStatus.UPDATED);
+            database.updateUser(user.get());
+            return true;
+        }
+        return false;
     }
 
     public boolean loadHabit(String email, Habit habit) {
@@ -115,32 +140,65 @@ public class AccountRepository {
         if (!habitsOfUser.containsKey(user)) {
             return false;
         }
-        TreeSet<Habit> habitsSet = habitsOfUser.get(user);
-        habitsSet.add(habit);
+        Map<String,Habit> habits = habitsOfUser.get(user);
+        if (habits.containsKey(habit.getTitle())) {
+            return false;
+        }
+        habits.put(habit.getTitle(), habit);
+        return true;
+    }
+
+    public boolean changeHabitProperties(String email, Habit oldHabit, Habit newHabit) {
+        Map<String,Habit> userHabits = getHabitsOfUser(email).orElseGet(LinkedHashMap::new);
+        Optional<User> user = getUserByEmail(email.toLowerCase());
+        if (!userHabits.containsKey(oldHabit.getTitle()) || user.isEmpty()) {
+            return false;
+        }
+        oldHabit.setStatus(EntityStatus.UPDATED);
+        userHabits.remove(oldHabit.getTitle());
+        oldHabit.setTitle(newHabit.getTitle());
+        oldHabit.setDescription(newHabit.getDescription());
+        oldHabit.setPeriod(newHabit.getPeriod());
+        userHabits.put(oldHabit.getTitle(), oldHabit);
+        database.updateHabit(user.get().getId(), oldHabit);
         return true;
     }
 
     public boolean createHabit(String email, Habit habit) {
-        email = email.toLowerCase();
-        if (loadHabit(email, habit)) {
+        Optional<User> user = getUserByEmail(email);
+        if (user.isPresent() && loadHabit(email, habit)) {
             habit.setStatus(EntityStatus.CREATED);
-            habit.setUserId(userByEmail.get(email).getId());
+            habit.setUserId(user.get().getId());
+            database.saveHabit(user.get().getId(), habit);
             return true;
         }
         return false;
     }
 
-    public boolean setHabits(long userID, List<Habit> habits) {
+    public boolean setHabits(long userID, List<Habit> habitsList) {
         if (!isUserExists(userID)) {
             return false;
         }
         User user = userByID.get(userID);
-        if (!habitsOfUser.containsKey(user)) {
-            habitsOfUser.remove(user);
-        }
-        TreeSet<Habit> habitsSet = new TreeSet<>(habits);
-        habitsOfUser.put(user, habitsSet);
+        habitsOfUser.remove(user);
+        Map<String,Habit> habits = habitsList.stream()
+                .collect(Collectors.toMap(Habit::getTitle, habit -> habit));
+        habitsOfUser.put(user, habits);
         return true;
+    }
+
+    public boolean deleteHabit(String email, String title) {
+        Optional<User> user = getUserByEmail(email);
+        if (user.isPresent()) {
+            Map<String,Habit> userHabits = habitsOfUser.get(user.get());
+            if (userHabits.containsKey(title)) {
+                Habit habit = userHabits.get(title);
+                database.removeHabit(user.get().getId(), habit);
+                userHabits.remove(title);
+                return true;
+            }
+        }
+        return false;
     }
 
     public Optional<User> getUserByEmail(String email) {
@@ -184,63 +242,24 @@ public class AccountRepository {
         return user.isPresent() && password.equals(user.get().getPassword());
     }
 
-    public Set<Habit> getHabitsOfUser(String email) {
-        if (!isUserExists(email.toLowerCase())) {
-            return new TreeSet<>();
+    public Optional<Map<String,Habit>> getHabitsOfUser(String email) {
+        Optional<User> user = getUserByEmail(email);
+        if (user.isEmpty()) {
+            return Optional.empty();
         }
-        User user = userByEmail.get(email.toLowerCase());
-        if (habitsOfUser.containsKey(user)) {
-            return habitsOfUser.get(user).stream()
-                    .filter(h -> h.getStatus() != EntityStatus.DELETED)
-                    .collect(Collectors.toCollection(TreeSet::new));
+        if (habitsOfUser.containsKey(user.get())) {
+            return Optional.of(habitsOfUser.get(user.get()));
         }
-        return new TreeSet<>();
-    }
-
-    public List<User> getUsersByStatus(EntityStatus accountStatus) {
-        List<User> users = new LinkedList<>();
-        for (User user: habitsOfUser.keySet()) {
-            if (user.getAccountStatus().equals(accountStatus)) {
-                users.add(user);
-            }
-        }
-        return users;
+        return Optional.empty();
     }
 
     public Optional<Habit> getHabitByTitle(String email, String title) {
-        Set<Habit> habits = getHabitsOfUser(email.toLowerCase());
-        if (habits.isEmpty()) {
-            return Optional.empty();
-        }
-        return habits.stream()
-                .filter(h -> title.equals(h.getTitle()))
-                .findFirst();
+        Optional<Map<String,Habit>> habits = getHabitsOfUser(email);
+        return habits.map(stringHabitMap -> stringHabitMap.get(title));
     }
 
     public List<User> getUsers() {
         return new LinkedList<>(habitsOfUser.keySet());
     }
 
-    @PreDestroy
-    public void release() {
-        // Save new users
-        List<User> createdUsers = getUsersByStatus(EntityStatus.CREATED);
-        database.saveUsers(createdUsers);
-
-        // Save users with changed profile attributes
-        List<User> updatedUsers = getUsersByStatus(EntityStatus.UPDATED);
-        database.updateUsers(updatedUsers);
-
-        // Perform saving, updating and deleting habits
-        List<User> users = getUsers();
-        for (User user : users) {
-            List<Habit> habits = new LinkedList<>(getHabitsOfUser(user.getEmail()));
-            database.saveHabits(user.getId(), habits);
-            database.updateHabits(user.getId(), habits);
-            database.removeHabits(user.getId(), habits);
-        }
-        // Remove users which was marked as deleted
-        List<User> deletedUsers = getUsersByStatus(EntityStatus.DELETED);
-        database.removeUsers(deletedUsers);
-    }
 }

@@ -15,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -46,9 +48,11 @@ public class HabitController {
         }
         // Try to get the list of habits
         Set<HabitDto> habitsDto = repository.getHabitsOfUser(user.get().getEmail())
-                .stream()
-                .map(HabitMapper.INSTANCE::habitToHabitDto)
-                .collect(Collectors.toSet());
+                .map(habits -> habits.values().stream()
+                        .map(HabitMapper.INSTANCE::habitToHabitDto)
+                        .collect(Collectors.toSet()))
+                .orElse(Collections.emptySet());
+
         if(repository.isUserAuthorized(token)) {
             return ResponseEntity.ok().body(habitsDto);
         } else {
@@ -68,7 +72,7 @@ public class HabitController {
         }
         // Try to create habit
         HabitCreationResult result = habitService.createHabit(user.get().getEmail(), token, habitDto);
-        if (result.getSuccess()) {
+        if (result.isSuccess()) {
             return ResponseEntity.ok().body(new MessageDto("Habit has been created"));
         } else {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(new MessageDto("Failed to create a habit"));
@@ -98,10 +102,10 @@ public class HabitController {
     }
 
     /**
-     *  Delete existing habit
+     *  Change existing habit
      */
-    @DeleteMapping
-    protected ResponseEntity<MessageDto> deleteHabit(HttpServletRequest req) {
+    @PutMapping("/mark")
+    protected ResponseEntity<MessageDto> markHabit(HttpServletRequest req) {
         // Check token
         String token = TokenReader.readToken(req, repository);
         if (token == null || token.isEmpty()) {
@@ -113,10 +117,37 @@ public class HabitController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new MessageDto("Habit title has not been provided"));
         }
-        // Try to delete the habit
         Optional<User> user = repository.getUserByToken(token);
-        boolean isDeleted = user.isPresent()
-                && habitService.deleteHabit(user.get().getEmail(), token, habitTitle);
+        boolean isMarked = user.isPresent()
+                && habitService.markHabitAsCompleted(user.get().getEmail(), token, habitTitle);
+        if(isMarked) {
+            return ResponseEntity.ok()
+                    .body(new MessageDto("Habit marked successfully"));
+        } else {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new MessageDto("Failed to mark the habit"));
+        }
+    }
+
+    /**
+     *  Delete existing habit
+     */
+    @DeleteMapping
+    protected ResponseEntity<MessageDto> deleteHabit(@RequestParam("title") String habitTitle, HttpServletRequest req) {
+        // Check token
+        String token = TokenReader.readToken(req, repository);
+        Optional<User> user = repository.getUserByToken(token);
+        if (token == null || token.isEmpty() || user.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        // Check habit title
+        if (habitTitle == null || habitTitle.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new MessageDto("Habit title has not been provided"));
+        }
+        // Try to delete the habit
+        String email = user.get().getEmail();
+        boolean isDeleted = habitService.deleteHabit(email, token, habitTitle);
         if(isDeleted) {
             return ResponseEntity.ok()
                     .body(new MessageDto("Habit deleted successfully"));
@@ -125,4 +156,5 @@ public class HabitController {
                     .body(new MessageDto("Failed to delete the habit"));
         }
     }
+
 }

@@ -4,19 +4,20 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
-import org.habitsapp.client.Main;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 @Aspect
-public class ExecutionTime {
-    private static final Logger logger = LoggerFactory.getLogger(Main.class);
+@Component
+public class UsersLoading {
+    private static final Logger logger = LoggerFactory.getLogger(UsersLoading.class);
 
-    @Pointcut("within(@org.habitsapp.annotations.Measurable *) && execution(* * (..))")
-    public void annotatedByMeasurable() {}
+    @Pointcut("execution(* org.habitsapp.server.repository.DatabasePostgres.loadUsers(..))")
+    public void loadUsers() {}
 
-    @Around("annotatedByMeasurable()")
-    public Object logging(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
+    @Around("loadUsers()")
+    public Object measureUsersLoading(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
         logger.info("Calling method {}", proceedingJoinPoint.getSignature());
         long start = System.currentTimeMillis();
         Object result = proceedingJoinPoint.proceed();

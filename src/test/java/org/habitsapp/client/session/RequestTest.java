@@ -23,18 +23,17 @@ public class RequestTest {
         assertThat(result.isSuccess()).isTrue();
         // Logout
         boolean isLoggedOut = request.logout(result.getToken());
-        assertThat(result.isSuccess()).isTrue();
+        assertThat(isLoggedOut).isTrue();
     }
 
     @Test
     @DisplayName("Register new user, then login, finally delete profile")
     public void shouldRegisterLoginDeleteUser() {
         Request request = new Request();
-        RegistrationResult result = null;
 
         // Register
-        result = request.register("Ruslan", "ruslan@mail.ru", "ruslan123");
-        assertThat(result.isSuccess()).isTrue();
+        RegistrationResult regResult = request.register("Ruslan", "ruslan@mail.ru", "ruslan123");
+        assertThat(regResult.isSuccess()).isTrue();
 
         // Login
         AuthorizationResult authResult = request.login("ruslan@mail.ru", "ruslan123");
@@ -46,19 +45,20 @@ public class RequestTest {
     }
 
     @Test
-    @DisplayName("Register new user, then login, finally delete profile")
+    @DisplayName("Authorize, create habit, finally delete habit")
     public void shouldLoginThenManageHabit() {
         Request request = new Request();
-        RegistrationResult result = null;
         // Login
         AuthorizationResult authResult = request.login("admin@mail.ru", "AdminPassword");
         assertThat(authResult.isSuccess()).isTrue();
+
         // Create habit
         boolean isHabitCreated = request.createHabit(authResult.getToken(), new HabitDto("TestHabit", "", 1, 0));
-        assertThat(authResult.isSuccess()).isTrue();
+        assertThat(isHabitCreated).isTrue();
         // Delete habit
+
         boolean isHabitDeleted = request.deleteHabit(authResult.getToken(), new HabitDto("TestHabit", "", 1, 0));
-        assertThat(authResult.isSuccess()).isTrue();
+        assertThat(isHabitDeleted).isTrue();
     }
 
 }

@@ -1,8 +1,5 @@
 package org.habitsapp.server;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
@@ -21,14 +18,6 @@ public class WebConfig implements WebMvcConfigurer {
         Jackson2ObjectMapperBuilder builder = new Jackson2ObjectMapperBuilder()
                 .indentOutput(true);
         converters.add(new MappingJackson2HttpMessageConverter(builder.build()));
-        //converters.add(mappingJackson2HttpMessageConverter());
-    }
-
-    @Bean
-    public MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        return new MappingJackson2HttpMessageConverter(objectMapper);
     }
 
 }

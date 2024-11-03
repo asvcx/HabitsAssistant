@@ -129,27 +129,25 @@ public class DatabasePostgres implements Database {
     }
 
     /**
-     * Save a list of users to the database.
+     * Save a user to the database.
      */
-    public void saveUsers(List<User> users) {
+    public void saveUser(User user) {
         String QUERY_SAVE_USER = String.format(
                 "INSERT INTO %s.%s (\"UserID\", \"UserName\", \"Email\", \"Password\", \"Blocked\", \"AccessLevel\")" +
-                " VALUES (nextval('habits_model_schema.user_seq'), ?, ?, ?, ?, ?)" +
-                " ON CONFLICT (\"UserID\") DO NOTHING RETURNING \"UserID\";",
+                        " VALUES (nextval('habits_model_schema.user_seq'), ?, ?, ?, ?, ?)" +
+                        " ON CONFLICT (\"UserID\") DO NOTHING RETURNING \"UserID\";",
                 SCHEMA_NAME, TBL_USERS_NAME
         );
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER_NAME, DB_PASSWORD);
              PreparedStatement pStatement = connection.prepareStatement(QUERY_SAVE_USER)) {
-            for (User user : users) {
-                if (user.getAccountStatus() == EntityStatus.CREATED) {
-                    new DBUserMapper().mapFromObj(pStatement, user);
-                    ResultSet resultSet = pStatement.executeQuery();
-                    resultSet.next();
-                    long userId = resultSet.getLong("UserID");
-                    user.setId(userId);
-                    user.setAccountStatus(EntityStatus.STABLE);
-                    logger.info("User saved to database. Email : [{}]; id : [{}]", user.getEmail(), user.getId());
-                }
+            if (user.getAccountStatus() == EntityStatus.CREATED) {
+                new DBUserMapper().mapFromObj(pStatement, user);
+                ResultSet resultSet = pStatement.executeQuery();
+                resultSet.next();
+                long userId = resultSet.getLong("UserID");
+                user.setId(userId);
+                user.setAccountStatus(EntityStatus.STABLE);
+                logger.info("User saved to database. Email : [{}]; id : [{}]", user.getEmail(), user.getId());
             }
         } catch (SQLException e) {
             handleSQLException(e);
@@ -157,24 +155,23 @@ public class DatabasePostgres implements Database {
     }
 
     /**
-     * Save a list of habits to the database.
+     * Save a habit to the database.
      */
-    public void saveHabits(long userID, List<Habit> habits) {
+    public void saveHabit(long userId, Habit habit) {
         String QUERY_SAVE_HABIT = String.format(
                 "INSERT INTO %s.%s (\"HabitID\", \"UserID\", \"Title\", \"Description\", \"Period\", \"StartDate\")" +
-                " VALUES (nextval('habits_model_schema.habit_seq'), ?, ?, ?, ?, ?)" +
-                " ON CONFLICT (\"HabitID\") DO NOTHING;",
+                        " VALUES (nextval('habits_model_schema.habit_seq'), ?, ?, ?, ?, ?)" +
+                        " ON CONFLICT (\"HabitID\") DO NOTHING;",
                 SCHEMA_NAME, TBL_HABITS_NAME
         );
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER_NAME, DB_PASSWORD);
              PreparedStatement pStatement = connection.prepareStatement(QUERY_SAVE_HABIT)) {
-            for (Habit habit : habits) {
-                if (habit.getStatus() == EntityStatus.CREATED) {
-                    new DBHabitMapper().mapFromObj(pStatement, habit);
-                    pStatement.executeUpdate();
-                    saveDates(connection, userID, habit);
-                    habit.setStatus(EntityStatus.STABLE);
-                }
+            if (habit.getStatus() == EntityStatus.CREATED) {
+                habit.setUserId(userId);
+                new DBHabitMapper().mapFromObj(pStatement, habit);
+                pStatement.executeUpdate();
+                saveDates(connection, habit.getUserId(), habit);
+                habit.setStatus(EntityStatus.STABLE);
             }
         } catch (SQLException e) {
             handleSQLException(e);
@@ -205,49 +202,45 @@ public class DatabasePostgres implements Database {
     }
 
     /**
-     * Update users with status 'UPDATED'.
+     * Update a user with status 'UPDATED'.
      */
-    public void updateUsers(List<User> users) {
+    public void updateUser(User user) {
         String QUERY_UPDATE_USER = String.format(
                 "UPDATE %s.%s SET \"UserName\" = ?, \"Email\" = ?, \"Password\" = ?, \"Blocked\" = ?, \"AccessLevel\" = ?" +
-                " WHERE \"UserID\" = ?;",
+                        " WHERE \"UserID\" = ?;",
                 SCHEMA_NAME, TBL_USERS_NAME
         );
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER_NAME, DB_PASSWORD);
              PreparedStatement pStatement = connection.prepareStatement(QUERY_UPDATE_USER)) {
-            for (User user : users) {
-                if (user.getAccountStatus() == EntityStatus.UPDATED) {
-                    new DBUserMapper().mapFromObj(pStatement, user);
-                    pStatement.setLong(6, user.getId());
-                    pStatement.executeUpdate();
-                    user.setAccountStatus(EntityStatus.STABLE);
-                    logger.info("User updated in database. Email : [{}]; id : [{}]", user.getEmail(), user.getId());
+            if (user.getAccountStatus() == EntityStatus.UPDATED) {
+                new DBUserMapper().mapFromObj(pStatement, user);
+                pStatement.setLong(6, user.getId());
+                pStatement.executeUpdate();
+                user.setAccountStatus(EntityStatus.STABLE);
+                logger.info("User updated in database. Email : [{}]; id : [{}]", user.getEmail(), user.getId());
                 }
-            }
         } catch (SQLException e) {
             handleSQLException(e);
         }
     }
 
     /**
-     * Update habits with status 'UPDATED' of a specified user.
+     * Update a habit with status 'UPDATED' of a specified user.
      */
-    public void updateHabits(long userID, List<Habit> habits) {
+    public void updateHabit(long userID, Habit habit) {
         String QUERY_UPDATE_HABIT = String.format(
                 "UPDATE %s.%s SET \"UserID\" = ?, \"Title\" = ?, \"Description\" = ?, \"Period\" = ?, \"StartDate\" = ?" +
-                " WHERE \"HabitID\" = ?;",
+                        " WHERE \"HabitID\" = ?;",
                 SCHEMA_NAME, TBL_HABITS_NAME
         );
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER_NAME, DB_PASSWORD);
              PreparedStatement pStatement = connection.prepareStatement(QUERY_UPDATE_HABIT)) {
-            for (Habit habit : habits) {
-                if (habit.getStatus() == EntityStatus.UPDATED) {
-                    new DBHabitMapper().mapFromObj(pStatement, habit);
-                    pStatement.setInt(6, habit.getId());
-                    pStatement.executeUpdate();
-                    saveDates(connection, userID, habit);
-                    habit.setStatus(EntityStatus.STABLE);
-                }
+            if (habit.getStatus() == EntityStatus.UPDATED) {
+                new DBHabitMapper().mapFromObj(pStatement, habit);
+                pStatement.setInt(6, habit.getId());
+                pStatement.executeUpdate();
+                saveDates(connection, userID, habit);
+                habit.setStatus(EntityStatus.STABLE);
             }
         } catch (SQLException e) {
             handleSQLException(e);
@@ -255,22 +248,20 @@ public class DatabasePostgres implements Database {
     }
 
     /**
-     * Remove users from database whose status field is 'DELETED'
+     * Remove a user from database whose status field is 'DELETED'
      */
-    public void removeUsers(List<User> users) {
+    public void removeUser(User user) {
         String QUERY_REMOVE_USER = String.format(
                 "DELETE FROM %s.%s WHERE \"UserID\" = ? AND \"Email\" = ?;",
                 SCHEMA_NAME, TBL_USERS_NAME
         );
         try(Connection connection = DriverManager.getConnection(DB_URL, DB_USER_NAME, DB_PASSWORD)) {
             try (PreparedStatement pStatement = connection.prepareStatement(QUERY_REMOVE_USER)) {
-                for (User user : users) {
-                    if (user.getAccountStatus() == EntityStatus.DELETED) {
-                        pStatement.setLong(1, user.getId());
-                        pStatement.setString(2, user.getEmail());
-                        pStatement.executeUpdate();
-                        logger.info("User deleted from database. Email : [{}]; id : [{}]", user.getEmail(), user.getId());
-                    }
+                if (user.getAccountStatus() == EntityStatus.DELETED) {
+                    pStatement.setLong(1, user.getId());
+                    pStatement.setString(2, user.getEmail());
+                    pStatement.executeUpdate();
+                    logger.info("User deleted from database. Email : [{}]; id : [{}]", user.getEmail(), user.getId());
                 }
             } catch (SQLException e) {
                 handleSQLException(e);
@@ -281,22 +272,20 @@ public class DatabasePostgres implements Database {
     }
 
     /**
-     * Remove habits from database with status field set to 'DELETED'
+     * Remove a habit from database with status field set to 'DELETED'
      */
-    public void removeHabits(long userID, List<Habit> habits) {
+    public void removeHabit(long userID, Habit habit) {
         String QUERY_REMOVE_HABIT = String.format(
-                "DELETE FROM %s.%s WHERE \"HabitID\" = ? AND \"UserEmail\" = ?;",
+                "DELETE FROM %s.%s WHERE \"HabitID\" = ? AND \"UserID\" = ?;",
                 SCHEMA_NAME, TBL_HABITS_NAME
         );
         try(Connection connection = DriverManager.getConnection(DB_URL, DB_USER_NAME, DB_PASSWORD)) {
             try (PreparedStatement pStatement = connection.prepareStatement(QUERY_REMOVE_HABIT)) {
-                for (Habit habit : habits) {
-                    if (habit.getStatus() == EntityStatus.DELETED) {
-                        removeDates(connection, userID, habit);
-                        pStatement.setInt(1, habit.getId());
-                        pStatement.setLong(2, userID);
-                        pStatement.executeUpdate();
-                    }
+                if (habit.getStatus() == EntityStatus.DELETED) {
+                    removeDates(connection, userID, habit);
+                    pStatement.setInt(1, habit.getId());
+                    pStatement.setLong(2, userID);
+                    pStatement.executeUpdate();
                 }
             } catch (SQLException e) {
                 handleSQLException(e);

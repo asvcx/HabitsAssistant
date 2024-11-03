@@ -1,6 +1,7 @@
 package org.habitsapp.server.controller;
 
 import org.habitsapp.exchange.MessageDto;
+import org.habitsapp.exchange.PasswordConfirmation;
 import org.habitsapp.exchange.ProfileChangeDto;
 import org.habitsapp.models.User;
 import org.habitsapp.models.dto.UserDto;
@@ -77,10 +78,10 @@ public class ProfileController {
     /**
      *  Delete user profile
      */
-    @DeleteMapping
-    public ResponseEntity<MessageDto> deleteUserProfile(HttpServletRequest req) {
+    @PostMapping("/delete")
+    public ResponseEntity<MessageDto> deleteUserProfile(@RequestBody PasswordConfirmation confirmation, HttpServletRequest req) {
         String token = TokenReader.readToken(req, repository);
-        String password = req.getHeader("X-Confirm-Password");
+        String password = confirmation.getPassword();
         if (token == null || token.isEmpty() || password == null || password.isEmpty()) {
             return ResponseEntity.badRequest()
                     .body(new MessageDto("You have not been authorized"));

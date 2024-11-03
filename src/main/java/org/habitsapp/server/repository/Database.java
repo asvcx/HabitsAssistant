@@ -9,10 +9,10 @@ import java.util.Map;
 public interface Database {
     List<User> loadUsers();
     Map<Long,List<Habit>> loadHabits();
-    void saveUsers(List<User> users);
-    void saveHabits(long userID, List<Habit> habits);
-    void updateUsers(List<User> users);
-    void updateHabits(long userID, List<Habit> habits);
-    void removeUsers(List<User> users);
-    void removeHabits(long userID, List<Habit> habits);
+    void saveUser(User user);
+    void saveHabit(long UserId, Habit habit);
+    void updateUser(User user);
+    void updateHabit(long userID, Habit habit);
+    void removeUser(User user);
+    void removeHabit(long userID, Habit habit);
 }

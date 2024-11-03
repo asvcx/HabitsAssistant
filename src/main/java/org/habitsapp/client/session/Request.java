@@ -153,7 +153,7 @@ public class Request {
         ObjectMapper objectMapper = new ObjectMapper();
         int responseCode = 0;
         try {
-            HttpURLConnection connection = createConnection(path, "POST", Session.getToken(), null);
+            HttpURLConnection connection = createConnection(path, "POST", token, null);
             responseCode = connection.getResponseCode();
             if (responseCode == HTTP_OK) {
                 MessageDto response = objectMapper.readValue(connection.getInputStream(), MessageDto.class);
@@ -240,12 +240,12 @@ public class Request {
     }
 
     public boolean deleteOwnProfile(String token, String password) {
-        String path = baseUrl + "/profile";
+        String path = baseUrl + "/profile/delete";
         ObjectMapper objectMapper = new ObjectMapper();
         int responseCode;
         try {
-            HttpURLConnection connection = createConnection(path, "DELETE", token, null);
-            connection.setRequestProperty("X-Confirm-Password", password);
+            String json = objectMapper.writeValueAsString(new PasswordConfirmation(password));
+            HttpURLConnection connection = createConnection(path, "POST", token, json);
             responseCode = connection.getResponseCode();
             if (responseCode == HTTP_OK) {
                 MessageDto response = objectMapper.readValue(connection.getInputStream(), MessageDto.class);
@@ -270,7 +270,7 @@ public class Request {
         int responseCode;
         try {
             String json = getJsonFromHabitDto(habitDto);
-            HttpURLConnection connection = createConnection(path, "POST", Session.getToken(), json);
+            HttpURLConnection connection = createConnection(path, "POST", token, json);
             responseCode = connection.getResponseCode();
             if (responseCode == HTTP_OK || responseCode == HTTP_CREATED) {
                 MessageDto response = objectMapper.readValue(connection.getInputStream(), MessageDto.class);
@@ -313,14 +313,11 @@ public class Request {
     }
 
     public boolean markHabit(String token, HabitDto habitDto) {
-        String path = baseUrl + "/mark";
+        String path = baseUrl + "/habits/mark?title=" + habitDto.getTitle();
         ObjectMapper objectMapper = new ObjectMapper();
-        JavaTimeModule module = new JavaTimeModule();
-        objectMapper.registerModule(module);
         int responseCode;
         try {
-            String json = objectMapper.writeValueAsString(habitDto);
-            HttpURLConnection connection = createConnection(path, "POST", token, json);
+            HttpURLConnection connection = createConnection(path, "PUT", token, null);
             responseCode = connection.getResponseCode();
             if (responseCode == HTTP_OK) {
                 MessageDto response = objectMapper.readValue(connection.getInputStream(), MessageDto.class);
@@ -339,15 +336,12 @@ public class Request {
 
     public boolean deleteHabit(String token, HabitDto habitDto) {
         String path = baseUrl + "/habits?title=" + habitDto.getTitle();
-        System.out.println("Path for delete habit: " + path);
         ObjectMapper objectMapper = new ObjectMapper();
-        JavaTimeModule module = new JavaTimeModule();
-        objectMapper.registerModule(module);
         int responseCode;
         try {
             HttpURLConnection connection = createConnection(path, "DELETE", token, null);
             responseCode = connection.getResponseCode();
-            if (responseCode == HTTP_OK || responseCode == HTTP_NO_CONTENT) {
+            if (responseCode == HTTP_OK) {
                 MessageDto response = objectMapper.readValue(connection.getInputStream(), MessageDto.class);
                 System.out.println(response.getMessage());
             } else {
@@ -359,7 +353,7 @@ public class Request {
             System.out.println(e.getMessage());
             return false;
         }
-        return responseCode == HTTP_OK || responseCode == HTTP_NO_CONTENT;
+        return responseCode == HTTP_OK;
     }
 
     public Set<Habit> getHabits(String token) {
