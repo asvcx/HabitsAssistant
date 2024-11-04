@@ -8,44 +8,44 @@
 
         <changeSet id="002-create-table" author="asvcx">
 
-            <createTable tableName="users" schemaName="habits_model_schema">
-                <column name="UserID" type="BIGINT">
+            <createTable tableName="users" schemaName="habits_model_schema" remarks="Table for user accounts">
+                <column name="UserID" type="BIGINT" remarks="Identifier of the user">
                     <constraints primaryKey="true" nullable="false"/>
                 </column>
-                <column name="UserName" type="VARCHAR(255)"/>
-                <column name="Password" type="VARCHAR(255)"/>
-                <column name="Email" type="VARCHAR(255)">
+                <column name="UserName" type="VARCHAR(255)" remarks="Name or alias of the user"/>
+                <column name="Password" type="VARCHAR(255)" remarks="Password for the user account"/>
+                <column name="Email" type="VARCHAR(255)" remarks="User email address">
                     <constraints unique="true" nullable="false"/>
                 </column>
-                <column name="Blocked" type="BOOLEAN"/>
-                <column name="AccessLevel" type="habits_model_schema.access_level"/>
+                <column name="Blocked" type="BOOLEAN" remarks="Indicates whether the user account is blocked"/>
+                <column name="AccessLevel" type="habits_model_schema.access_level" remarks="Determines access to administrative features"/>
             </createTable>
 
-            <createTable tableName="habits" schemaName="habits_model_schema">
-                <column name="HabitID" type="BIGINT">
+            <createTable tableName="habits" schemaName="habits_model_schema" remarks="Table for habits of users">
+                <column name="HabitID" type="BIGINT" remarks="Identifier of the habit">
                     <constraints primaryKey="true" nullable="false"/>
                 </column>
-                <column name="UserID" type="BIGINT">
+                <column name="UserID" type="BIGINT" remarks="Identifier of the user associated with the habit">
                     <constraints nullable="false"/>
                 </column>
-                <column name="Title" type="VARCHAR(255)">
+                <column name="Title" type="VARCHAR(255)" remarks="Title of the habit">
                     <constraints nullable="false"/>
                 </column>
-                <column name="Description" type="VARCHAR(255)"/>
-                <column name="Period" type="INT">
+                <column name="Description" type="VARCHAR(255)" remarks="Description of the habit"/>
+                <column name="Period" type="INT" remarks="Period for completing the habit in days">
                     <constraints nullable="false"/>
                 </column>
-                <column name="StartDate" type="TIMESTAMP WITHOUT TIME ZONE"/>
+                <column name="StartDate" type="TIMESTAMP WITHOUT TIME ZONE" remarks="Start date of the habit"/>
             </createTable>
 
-            <createTable tableName="completion_dates" schemaName="habits_model_schema">
-                <column name="UserID" type="BIGINT">
+            <createTable tableName="completion_dates" schemaName="habits_model_schema" remarks="Table for completion dates of habits">
+                <column name="UserID" type="BIGINT" remarks="Identifier of the user associated with completed habit">
                     <constraints nullable="false"/>
                 </column>
-                <column name="Title" type="VARCHAR(255)">
+                <column name="Title" type="VARCHAR(255)" remarks="Title of the completed habit">
                     <constraints nullable="false"/>
                 </column>
-                <column name="CompletionDate" type="TIMESTAMP WITHOUT TIME ZONE">
+                <column name="CompletionDate" type="TIMESTAMP WITHOUT TIME ZONE" remarks="Date when the habit was completed">
                     <constraints nullable="false"/>
                 </column>
             </createTable>

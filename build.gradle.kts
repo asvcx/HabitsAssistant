@@ -1,8 +1,10 @@
 plugins {
     id("java")
+    war
+    id("io.freefair.aspectj.post-compile-weaving") version "8.10.2"
 }
 
-group = "org.example"
+group = "org.habitsapp"
 version = "1.0-SNAPSHOT"
 
 repositories {
@@ -10,6 +12,12 @@ repositories {
 }
 
 dependencies {
+    testAnnotationProcessor("org.projectlombok:lombok:1.18.34")
+    compileOnly("org.projectlombok:lombok:1.18.34")
+    annotationProcessor("org.projectlombok:lombok:1.18.34")
+    testCompileOnly("org.projectlombok:lombok:1.18.34")
+    implementation("org.mapstruct:mapstruct:1.5.5.Final")
+    annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
     testImplementation("org.assertj:assertj-core:3.25.3")
     testImplementation(platform("org.junit:junit-bom:5.10.2"))
     testImplementation("org.junit.jupiter:junit-jupiter")
@@ -20,7 +28,18 @@ dependencies {
     implementation("org.postgresql:postgresql:42.7.2")
     implementation("org.liquibase:liquibase-core:4.9.1")
     implementation("org.slf4j:slf4j-api:2.0.13")
-    testImplementation("ch.qos.logback:logback-classic:1.5.6")
+    implementation("ch.qos.logback:logback-classic:1.5.6")
+    compileOnly("jakarta.servlet:jakarta.servlet-api:6.1.0")
+    implementation("com.fasterxml.jackson.core:jackson-core:2.17.2")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.17.2")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.2")
+    implementation("org.aspectj:aspectjrt:1.9.22")
+    implementation("org.aspectj:aspectjweaver:1.9.22")
+}
+
+tasks.war {
+    archiveFileName.set("HabitsAssistant.war")
+    webAppDirectory = file("src/main/webapp")
 }
 
 tasks.test {
