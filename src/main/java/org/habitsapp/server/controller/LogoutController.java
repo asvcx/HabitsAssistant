@@ -2,7 +2,7 @@ package org.habitsapp.server.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.habitsapp.exchange.MessageDto;
-import org.habitsapp.server.repository.AccountRepository;
+import org.habitsapp.server.repository.AccountRepo;
 import org.habitsapp.server.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,10 +16,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class LogoutController {
 
     private final UserService userService;
-    private final AccountRepository repository;
+    private final AccountRepo repository;
 
     @Autowired
-    public LogoutController(UserService userService, AccountRepository repository) {
+    public LogoutController(UserService userService, AccountRepo repository) {
         this.userService = userService;
         this.repository = repository;
     }

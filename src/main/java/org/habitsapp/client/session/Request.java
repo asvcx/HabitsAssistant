@@ -19,7 +19,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.habitsapp.models.results.AuthorizationResult;
 import org.habitsapp.models.results.RegistrationResult;
-import org.habitsapp.server.repository.AccountRepository;
+import org.habitsapp.server.repository.ProfileAction;
 
 import static java.net.HttpURLConnection.*;
 
@@ -90,7 +90,7 @@ public class Request {
         return result;
     }
 
-    public boolean manageUserProfile(String email, String token, String emailToManage, AccountRepository.ProfileAction action) {
+    public boolean manageUserProfile(String email, String token, String emailToManage, ProfileAction action) {
         String path = baseUrl + "/admin";
         ObjectMapper objectMapper = new ObjectMapper();
         JavaTimeModule module = new JavaTimeModule();
@@ -244,7 +244,7 @@ public class Request {
         ObjectMapper objectMapper = new ObjectMapper();
         int responseCode;
         try {
-            String json = objectMapper.writeValueAsString(new PasswordConfirmation(password));
+            String json = objectMapper.writeValueAsString(new PasswordConfirmDto(password));
             HttpURLConnection connection = createConnection(path, "POST", token, json);
             responseCode = connection.getResponseCode();
             if (responseCode == HTTP_OK) {

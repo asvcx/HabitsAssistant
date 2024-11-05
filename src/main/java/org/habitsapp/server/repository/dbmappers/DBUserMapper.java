@@ -11,12 +11,12 @@ import java.sql.Types;
 public class DBUserMapper implements ResultSetMapper<User> {
 
     public User mapToObj(ResultSet resultSet) throws SQLException {
-        int id = resultSet.getInt("UserID");
-        String name = resultSet.getString("UserName");
-        String email = resultSet.getString("Email");
-        String password = resultSet.getString("Password");
-        boolean blocked = resultSet.getBoolean("Blocked");
-        AccessLevel accessLevel = AccessLevel.valueOf(resultSet.getString("AccessLevel"));
+        int id = resultSet.getInt("user_id");
+        String name = resultSet.getString("user_name");
+        String email = resultSet.getString("email");
+        String password = resultSet.getString("password");
+        boolean blocked = resultSet.getBoolean("blocked");
+        AccessLevel accessLevel = AccessLevel.valueOf(resultSet.getString("access_level"));
         return new User(id, name, email, password, accessLevel, blocked);
     }
 

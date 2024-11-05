@@ -4,7 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.habitsapp.exchange.MessageDto;
 import org.habitsapp.exchange.PasswordChangeDto;
 import org.habitsapp.models.User;
-import org.habitsapp.server.repository.AccountRepository;
+import org.habitsapp.server.repository.AccountRepo;
 import org.habitsapp.server.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,10 +20,10 @@ import java.util.Optional;
 public class PasswordController {
 
     private final UserService userService;
-    private final AccountRepository repository;
+    private final AccountRepo repository;
 
     @Autowired
-    public PasswordController(UserService userService, AccountRepository accountRepository) {
+    public PasswordController(UserService userService, AccountRepo accountRepository) {
         this.userService = userService;
         this.repository = accountRepository;
     }

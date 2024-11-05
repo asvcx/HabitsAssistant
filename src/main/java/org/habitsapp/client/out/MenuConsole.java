@@ -8,7 +8,7 @@ import org.habitsapp.models.Habit;
 import org.habitsapp.client.in.InputOrder;
 import org.habitsapp.models.dto.HabitDto;
 import org.habitsapp.models.dto.HabitMapper;
-import org.habitsapp.server.repository.AccountRepository;
+import org.habitsapp.server.repository.ProfileAction;
 
 import java.time.*;
 import java.util.*;
@@ -224,11 +224,11 @@ public class MenuConsole implements Menu {
         Map<String, Runnable> options = new LinkedHashMap<>();
         options.put("1. Вывести список пользователей", () -> inputOrder.getProfilesList().forEach(System.out::println));
         options.put("2. Заблокировать пользователя",
-                () -> inputOrder.operateProfile("заблокировать", AccountRepository.ProfileAction.BLOCK));
+                () -> inputOrder.operateProfile("заблокировать", ProfileAction.BLOCK));
         options.put("3. Разблокировать пользователя",
-                () -> inputOrder.operateProfile("разблокировать", AccountRepository.ProfileAction.UNBLOCK));
+                () -> inputOrder.operateProfile("разблокировать", ProfileAction.UNBLOCK));
         options.put("4. Удалить пользователя",
-                () -> inputOrder.operateProfile("удалить", AccountRepository.ProfileAction.DELETE));
+                () -> inputOrder.operateProfile("удалить", ProfileAction.DELETE));
         options.put("0. Назад", () -> {});
         Supplier<Boolean> continueCondition = Session::isAuthorized;
         displayMenu(options, continueCondition, () -> {});

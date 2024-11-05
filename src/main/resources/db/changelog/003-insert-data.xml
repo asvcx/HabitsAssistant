@@ -8,30 +8,30 @@
         <changeSet id="003-insert-data" author="asvcx">
 
             <insert tableName="users" schemaName="habits_model_schema">
-                <column name="UserID" valueNumeric="nextval('habits_model_schema.user_seq')"/>
-                <column name="UserName" value="admin"/>
-                <column name="Password" value="AdminPassword"/>
-                <column name="Email" value="admin@mail.ru"/>
-                <column name="Blocked" value="false"/>
-                <column name="AccessLevel" value="ADMIN"/>
+                <column name="user_id" valueNumeric="nextval('habits_model_schema.user_seq')"/>
+                <column name="user_name" value="admin"/>
+                <column name="password" value="AdminPassword"/>
+                <column name="email" value="admin@mail.ru"/>
+                <column name="blocked" value="false"/>
+                <column name="access_level" value="ADMIN"/>
             </insert>
 
             <insert tableName="users" schemaName="habits_model_schema">
-                <column name="UserID" valueNumeric="nextval('habits_model_schema.user_seq')"/>
-                <column name="UserName" value="user"/>
-                <column name="Password" value="UserPassword"/>
-                <column name="Email" value="user@mail.ru"/>
-                <column name="Blocked" value="false"/>
-                <column name="AccessLevel" value="USER"/>
+                <column name="user_id" valueNumeric="nextval('habits_model_schema.user_seq')"/>
+                <column name="user_name" value="user"/>
+                <column name="password" value="UserPassword"/>
+                <column name="email" value="user@mail.ru"/>
+                <column name="blocked" value="false"/>
+                <column name="access_level" value="USER"/>
             </insert>
 
             <insert tableName="habits" schemaName="habits_model_schema">
-                <column name="HabitID" valueNumeric="nextval('habits_model_schema.habit_seq')"/>
-                <column name="UserID" value="2"/>
-                <column name="Title" value="Running"/>
-                <column name="Description" value="For health"/>
-                <column name="Period" valueNumeric="1"/>
-                <column name="StartDate" value="2024-10-17 14:30:00"/>
+                <column name="habit_id" valueNumeric="nextval('habits_model_schema.habit_seq')"/>
+                <column name="user_id" value="2"/>
+                <column name="title" value="Running"/>
+                <column name="description" value="For health"/>
+                <column name="period" valueNumeric="1"/>
+                <column name="start_date" value="2024-10-17 14:30:00"/>
             </insert>
 
     </changeSet>

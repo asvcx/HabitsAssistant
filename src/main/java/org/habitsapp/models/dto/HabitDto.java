@@ -1,13 +1,11 @@
 package org.habitsapp.models.dto;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import java.time.Instant;
 import java.util.TreeSet;
 
-@Getter
-@Setter
+@Data
 public class HabitDto implements Cloneable {
     private int id;
     private String title;

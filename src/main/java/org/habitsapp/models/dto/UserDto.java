@@ -1,11 +1,9 @@
 package org.habitsapp.models.dto;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 import org.habitsapp.models.AccessLevel;
 
-@Getter
-@Setter
+@Data
 public class UserDto implements Cloneable {
     private long id;
     private String name;

@@ -10,6 +10,7 @@ import org.habitsapp.server.repository.dbmappers.DBUserMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 
 import java.sql.*;
@@ -21,6 +22,7 @@ import java.util.*;
  * including loading, saving, updating, and deleting user and habit data.
  */
 @Component
+@DependsOn("migration")
 public class DatabasePostgres implements Database {
     private static final Logger logger = LoggerFactory.getLogger(DatabasePostgres.class);
 
@@ -31,14 +33,6 @@ public class DatabasePostgres implements Database {
     private final String TBL_USERS_NAME;
     private final String TBL_HABITS_NAME;
     private final String TBL_DATES_NAME;
-
-    static {
-        try {
-            Class.forName("org.postgresql.Driver");
-        } catch (ClassNotFoundException e) {
-            throw new ExceptionInInitializerError("Failed to load PostgreSQL driver: " + e.getMessage());
-        }
-    }
 
     /**
      * Create a Database instance with the specified connection parameters.
@@ -110,14 +104,14 @@ public class DatabasePostgres implements Database {
      * Load completion dates for specified habit.
      */
     private void loadDates(long userID, Habit habit) {
-        String QUERY_LOAD_DATES = String.format("SELECT * FROM %s.%s WHERE \"UserID\" = ? AND \"Title\" = ?;", SCHEMA_NAME, TBL_DATES_NAME);
+        String QUERY_LOAD_DATES = String.format("SELECT * FROM %s.%s WHERE \"user_id\" = ? AND \"title\" = ?;", SCHEMA_NAME, TBL_DATES_NAME);
         try(Connection connection = DriverManager.getConnection(DB_URL, DB_USER_NAME, DB_PASSWORD)) {
             PreparedStatement pStatement = connection.prepareStatement(QUERY_LOAD_DATES);
             pStatement.setLong(1, userID);
             pStatement.setString(2, habit.getTitle());
             try (ResultSet resultSet = pStatement.executeQuery()) {
                 while(resultSet.next()) {
-                    Instant date = resultSet.getTimestamp("CompletionDate").toInstant();
+                    Instant date = resultSet.getTimestamp("completion_date").toInstant();
                     habit.addCompletionDate(date);
                 }
             } catch (SQLException e) {
@@ -133,9 +127,9 @@ public class DatabasePostgres implements Database {
      */
     public void saveUser(User user) {
         String QUERY_SAVE_USER = String.format(
-                "INSERT INTO %s.%s (\"UserID\", \"UserName\", \"Email\", \"Password\", \"Blocked\", \"AccessLevel\")" +
+                "INSERT INTO %s.%s (\"user_id\", \"user_name\", \"email\", \"password\", \"blocked\", \"access_level\")" +
                         " VALUES (nextval('habits_model_schema.user_seq'), ?, ?, ?, ?, ?)" +
-                        " ON CONFLICT (\"UserID\") DO NOTHING RETURNING \"UserID\";",
+                        " ON CONFLICT (\"user_id\") DO NOTHING RETURNING \"user_id\";",
                 SCHEMA_NAME, TBL_USERS_NAME
         );
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER_NAME, DB_PASSWORD);
@@ -144,7 +138,7 @@ public class DatabasePostgres implements Database {
                 new DBUserMapper().mapFromObj(pStatement, user);
                 ResultSet resultSet = pStatement.executeQuery();
                 resultSet.next();
-                long userId = resultSet.getLong("UserID");
+                long userId = resultSet.getLong("user_id");
                 user.setId(userId);
                 user.setAccountStatus(EntityStatus.STABLE);
                 logger.info("User saved to database. Email : [{}]; id : [{}]", user.getEmail(), user.getId());
@@ -159,9 +153,9 @@ public class DatabasePostgres implements Database {
      */
     public void saveHabit(long userId, Habit habit) {
         String QUERY_SAVE_HABIT = String.format(
-                "INSERT INTO %s.%s (\"HabitID\", \"UserID\", \"Title\", \"Description\", \"Period\", \"StartDate\")" +
+                "INSERT INTO %s.%s (\"habit_id\", \"user_id\", \"title\", \"description\", \"period\", \"start_date\")" +
                         " VALUES (nextval('habits_model_schema.habit_seq'), ?, ?, ?, ?, ?)" +
-                        " ON CONFLICT (\"HabitID\") DO NOTHING;",
+                        " ON CONFLICT (\"habit_id\") DO NOTHING;",
                 SCHEMA_NAME, TBL_HABITS_NAME
         );
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER_NAME, DB_PASSWORD);
@@ -183,9 +177,9 @@ public class DatabasePostgres implements Database {
      */
     private void saveDates(Connection connection, long userID, Habit habit) {
         String QUERY_SAVE_DATE = String.format(
-                "INSERT INTO %s.%s (\"UserID\", \"Title\", \"CompletionDate\")" +
+                "INSERT INTO %s.%s (\"user_id\", \"title\", \"completion_date\")" +
                 " VALUES (?, ?, ?)" +
-                " ON CONFLICT (\"UserID\", \"Title\", \"CompletionDate\") DO NOTHING;",
+                " ON CONFLICT (\"user_id\", \"title\", \"completion_date\") DO NOTHING;",
                 SCHEMA_NAME, TBL_DATES_NAME
         );
         try (PreparedStatement pStatement = connection.prepareStatement(QUERY_SAVE_DATE)) {
@@ -206,8 +200,8 @@ public class DatabasePostgres implements Database {
      */
     public void updateUser(User user) {
         String QUERY_UPDATE_USER = String.format(
-                "UPDATE %s.%s SET \"UserName\" = ?, \"Email\" = ?, \"Password\" = ?, \"Blocked\" = ?, \"AccessLevel\" = ?" +
-                        " WHERE \"UserID\" = ?;",
+                "UPDATE %s.%s SET \"user_name\" = ?, \"email\" = ?, \"password\" = ?, \"blocked\" = ?, \"access_level\" = ?" +
+                        " WHERE \"user_id\" = ?;",
                 SCHEMA_NAME, TBL_USERS_NAME
         );
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER_NAME, DB_PASSWORD);
@@ -229,8 +223,8 @@ public class DatabasePostgres implements Database {
      */
     public void updateHabit(long userID, Habit habit) {
         String QUERY_UPDATE_HABIT = String.format(
-                "UPDATE %s.%s SET \"UserID\" = ?, \"Title\" = ?, \"Description\" = ?, \"Period\" = ?, \"StartDate\" = ?" +
-                        " WHERE \"HabitID\" = ?;",
+                "UPDATE %s.%s SET \"user_id\" = ?, \"title\" = ?, \"description\" = ?, \"period\" = ?, \"startDate\" = ?" +
+                        " WHERE \"habit_id\" = ?;",
                 SCHEMA_NAME, TBL_HABITS_NAME
         );
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER_NAME, DB_PASSWORD);
@@ -252,7 +246,7 @@ public class DatabasePostgres implements Database {
      */
     public void removeUser(User user) {
         String QUERY_REMOVE_USER = String.format(
-                "DELETE FROM %s.%s WHERE \"UserID\" = ? AND \"Email\" = ?;",
+                "DELETE FROM %s.%s WHERE \"user_id\" = ? AND \"email\" = ?;",
                 SCHEMA_NAME, TBL_USERS_NAME
         );
         try(Connection connection = DriverManager.getConnection(DB_URL, DB_USER_NAME, DB_PASSWORD)) {
@@ -276,7 +270,7 @@ public class DatabasePostgres implements Database {
      */
     public void removeHabit(long userID, Habit habit) {
         String QUERY_REMOVE_HABIT = String.format(
-                "DELETE FROM %s.%s WHERE \"HabitID\" = ? AND \"UserID\" = ?;",
+                "DELETE FROM %s.%s WHERE \"habit_id\" = ? AND \"user_id\" = ?;",
                 SCHEMA_NAME, TBL_HABITS_NAME
         );
         try(Connection connection = DriverManager.getConnection(DB_URL, DB_USER_NAME, DB_PASSWORD)) {
@@ -300,7 +294,7 @@ public class DatabasePostgres implements Database {
      */
     private void removeDates(Connection connection, long userID, Habit habit) {
         String QUERY_REMOVE_DATE = String.format(
-                "DELETE FROM %s.%s WHERE \"UserID\" = ? AND \"Title\" = ? AND \"CompletionDate\" = ?;",
+                "DELETE FROM %s.%s WHERE \"user_id\" = ? AND \"title\" = ? AND \"completion_date\" = ?;",
                 SCHEMA_NAME, TBL_DATES_NAME
         );
         try (PreparedStatement pStatement = connection.prepareStatement(QUERY_REMOVE_DATE)) {

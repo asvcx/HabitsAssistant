@@ -17,12 +17,12 @@ public class RequestTest {
         AuthorizationResult result = null;
         // Login with wrong credentials
         result = request.login("WrongEmail", "WrongPassword");
-        assertThat(result.isSuccess()).isFalse();
+        assertThat(result.success()).isFalse();
         // Login with correct credentials
         result = request.login("admin@mail.ru", "AdminPassword");
-        assertThat(result.isSuccess()).isTrue();
+        assertThat(result.success()).isTrue();
         // Logout
-        boolean isLoggedOut = request.logout(result.getToken());
+        boolean isLoggedOut = request.logout(result.token());
         assertThat(isLoggedOut).isTrue();
     }
 
@@ -33,14 +33,14 @@ public class RequestTest {
 
         // Register
         RegistrationResult regResult = request.register("Ruslan", "ruslan@mail.ru", "ruslan123");
-        assertThat(regResult.isSuccess()).isTrue();
+        assertThat(regResult.success()).isTrue();
 
         // Login
         AuthorizationResult authResult = request.login("ruslan@mail.ru", "ruslan123");
-        assertThat(authResult.isSuccess()).isTrue();
+        assertThat(authResult.success()).isTrue();
 
         // Delete
-        boolean isDeleted = request.deleteOwnProfile(authResult.getToken(), "ruslan123");
+        boolean isDeleted = request.deleteOwnProfile(authResult.token(), "ruslan123");
         assertThat(isDeleted).isTrue();
     }
 
@@ -50,14 +50,14 @@ public class RequestTest {
         Request request = new Request();
         // Login
         AuthorizationResult authResult = request.login("admin@mail.ru", "AdminPassword");
-        assertThat(authResult.isSuccess()).isTrue();
+        assertThat(authResult.success()).isTrue();
 
         // Create habit
-        boolean isHabitCreated = request.createHabit(authResult.getToken(), new HabitDto("TestHabit", "", 1, 0));
+        boolean isHabitCreated = request.createHabit(authResult.token(), new HabitDto("TestHabit", "", 1, 0));
         assertThat(isHabitCreated).isTrue();
         // Delete habit
 
-        boolean isHabitDeleted = request.deleteHabit(authResult.getToken(), new HabitDto("TestHabit", "", 1, 0));
+        boolean isHabitDeleted = request.deleteHabit(authResult.token(), new HabitDto("TestHabit", "", 1, 0));
         assertThat(isHabitDeleted).isTrue();
     }
 

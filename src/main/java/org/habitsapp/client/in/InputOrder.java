@@ -8,7 +8,7 @@ import org.habitsapp.models.dto.HabitDto;
 import org.habitsapp.models.Habit;
 import org.habitsapp.models.dto.HabitMapper;
 import org.habitsapp.models.dto.UserDto;
-import org.habitsapp.server.repository.AccountRepository;
+import org.habitsapp.server.repository.ProfileAction;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -26,11 +26,11 @@ public class InputOrder {
         String password = currentScanner.nextLine();
         Request request = new Request();
         AuthorizationResult result = request.login(email, password);
-        if (result.isSuccess()) {
-            Session.start(result.getUserDto(), result.getToken());
+        if (result.success()) {
+            Session.start(result.userDto(), result.token());
             System.out.printf("Вы вошли как %s%n", Session.getName());
         } else {
-            System.out.println("Не удалось войти в аккаунт: " + result.getMessage());
+            System.out.println("Не удалось войти в аккаунт: " + result.message());
         }
     }
 
@@ -44,10 +44,10 @@ public class InputOrder {
         Request request = new Request();
         UserDto user = userInput.getTempUser();
         RegistrationResult result = request.register(user.getName(), user.getEmail(), user.getPassword());
-        if (result.isSuccess()) {
+        if (result.success()) {
             System.out.println("Регистрация прошла успешно");
         } else {
-            System.out.println("Не удалось зарегистрироваться: " + result.getMessage());
+            System.out.println("Не удалось зарегистрироваться: " + result.message());
         }
     }
 
@@ -56,7 +56,7 @@ public class InputOrder {
         return request.getProfilesList(Session.getEmail(), Session.getToken());
     }
 
-    public void operateProfile(String actionWord, AccountRepository.ProfileAction action) {
+    public void operateProfile(String actionWord, ProfileAction action) {
         System.out.printf("Введите электронную почту пользователя, которого требуется %s.%n", actionWord);
         String emailToRemove = currentScanner.nextLine();
         Request request = new Request();

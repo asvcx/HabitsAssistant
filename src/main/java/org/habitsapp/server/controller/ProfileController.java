@@ -1,12 +1,13 @@
 package org.habitsapp.server.controller;
 
 import org.habitsapp.exchange.MessageDto;
-import org.habitsapp.exchange.PasswordConfirmation;
+import org.habitsapp.exchange.PasswordConfirmDto;
 import org.habitsapp.exchange.ProfileChangeDto;
 import org.habitsapp.models.User;
 import org.habitsapp.models.dto.UserDto;
 import org.habitsapp.models.results.RegistrationResult;
-import org.habitsapp.server.repository.AccountRepository;
+import org.habitsapp.server.repository.AccountRepo;
+import org.habitsapp.server.repository.AccountRepoImpl;
 import org.habitsapp.server.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,10 +21,10 @@ import java.util.Optional;
 public class ProfileController {
 
     private final UserService userService;
-    private final AccountRepository repository;
+    private final AccountRepo repository;
 
     @Autowired
-    public ProfileController(UserService userService, AccountRepository repository) {
+    public ProfileController(UserService userService, AccountRepo repository) {
         this.userService = userService;
         this.repository = repository;
     }
@@ -40,10 +41,10 @@ public class ProfileController {
         }
         // Try to create user profile
         RegistrationResult result = userService.registerUser(userDto);
-        if (result.isSuccess()) {
-            return ResponseEntity.ok().body(new MessageDto(result.getMessage()));
+        if (result.success()) {
+            return ResponseEntity.ok().body(new MessageDto(result.message()));
         } else {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(new MessageDto(result.getMessage()));
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(new MessageDto(result.message()));
         }
     }
 
@@ -79,7 +80,7 @@ public class ProfileController {
      *  Delete user profile
      */
     @PostMapping("/delete")
-    public ResponseEntity<MessageDto> deleteUserProfile(@RequestBody PasswordConfirmation confirmation, HttpServletRequest req) {
+    public ResponseEntity<MessageDto> deleteUserProfile(@RequestBody PasswordConfirmDto confirmation, HttpServletRequest req) {
         String token = TokenReader.readToken(req, repository);
         String password = confirmation.getPassword();
         if (token == null || token.isEmpty() || password == null || password.isEmpty()) {

@@ -4,12 +4,11 @@ import org.habitsapp.exchange.AdminActionDto;
 import org.habitsapp.exchange.MessageDto;
 import org.habitsapp.models.AccessLevel;
 import org.habitsapp.models.User;
-import org.habitsapp.server.repository.AccountRepository;
+import org.habitsapp.server.repository.AccountRepo;
 import org.habitsapp.server.service.UserService;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,10 +19,10 @@ import jakarta.servlet.http.HttpServletRequest;
 public class AdminController {
 
     private final UserService userService;
-    private final AccountRepository repository;
+    private final AccountRepo repository;
 
     @Autowired
-    public AdminController(UserService userService, @Qualifier("accountRepository") AccountRepository repository) {
+    public AdminController(UserService userService, AccountRepo repository) {
         this.userService = userService;
         this.repository = repository;
     }

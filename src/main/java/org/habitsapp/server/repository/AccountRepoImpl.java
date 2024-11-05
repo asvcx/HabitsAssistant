@@ -3,25 +3,20 @@ package org.habitsapp.server.repository;
 import org.habitsapp.models.EntityStatus;
 import org.habitsapp.models.Habit;
 import org.habitsapp.models.User;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Repository;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Repository
-@DependsOn("migration")
-public class AccountRepository {
+public class AccountRepoImpl implements AccountRepo {
     private final Database database;
-    public enum ProfileAction {
-        BLOCK, UNBLOCK, DELETE
-    }
     private static final Map<User,Map<String,Habit>> habitsOfUser = new HashMap<>();
     private static final Map<String,User> userByEmail = new HashMap<>();
     private static final Map<Long,User> userByID = new HashMap<>();
     private static final Map<String,User> userByToken = new HashMap<>();
 
-    public AccountRepository(Database database) {
+    public AccountRepoImpl(Database database) {
         this.database = database;
         // Load users from database
         List<User> users = database.loadUsers();
@@ -91,13 +86,13 @@ public class AccountRepository {
         userByToken.remove(token);
         userByEmail.put(newEmail, changedUser);
         habitsOfUser.put(changedUser, userHabits);
-        userByToken.put(token, user);
+        userByToken.put(token, changedUser);
         user.setAccountStatus(EntityStatus.UPDATED);
         database.updateUser(user);
         return true;
     }
 
-    public boolean stopSession(String token) {
+    public boolean cancelToken(String token) {
         if (userByToken.containsKey(token)) {
             userByToken.remove(token);
             return true;
@@ -107,7 +102,7 @@ public class AccountRepository {
 
     public boolean deleteUser(String email, String token) {
         Optional<User> userOpt = getUserByEmail(email);
-        stopSession(token);
+        cancelToken(token);
         if (userOpt.isEmpty()) {
             return false;
         }

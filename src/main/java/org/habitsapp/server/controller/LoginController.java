@@ -1,7 +1,6 @@
 package org.habitsapp.server.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.habitsapp.exchange.SessionDto;
 import org.habitsapp.models.dto.UserDto;
 import org.habitsapp.models.results.AuthorizationResult;
@@ -34,9 +33,9 @@ public class LoginController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
         AuthorizationResult result = userService.authorizeUser(userDto.getEmail(), userDto.getPassword());
-        if (result.isSuccess()) {
+        if (result.success()) {
             HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Token " + result.getToken());
+            headers.set("Authorization", "Token " + result.token());
             SessionDto sessionDto = new SessionDto(userDto.getName(), userDto.getEmail(), userDto.getAccessLevel());
             return ResponseEntity.ok().headers(headers).body(sessionDto);
         } else {

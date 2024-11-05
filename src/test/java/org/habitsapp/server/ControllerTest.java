@@ -1,19 +1,20 @@
 package org.habitsapp.server;
 
 import org.habitsapp.exchange.AdminActionDto;
-import org.habitsapp.exchange.PasswordConfirmation;
+import org.habitsapp.exchange.PasswordConfirmDto;
 import org.habitsapp.server.controller.AdminController;
 import org.habitsapp.server.controller.LogoutController;
 import org.habitsapp.server.controller.ProfileController;
+import org.habitsapp.server.repository.ProfileAction;
 import org.junit.jupiter.api.*;
 import org.habitsapp.exchange.SessionDto;
 import org.habitsapp.models.AccessLevel;
 import org.habitsapp.models.dto.UserDto;
 import org.habitsapp.server.controller.LoginController;
 import org.habitsapp.server.migration.DatabaseConfig;
-import org.habitsapp.server.repository.AccountRepository;
+import org.habitsapp.server.repository.AccountRepoImpl;
 import org.habitsapp.server.repository.DatabasePostgres;
-import org.habitsapp.server.service.UserService;
+import org.habitsapp.server.service.UserServiceImpl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -26,14 +27,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class ControllerTest {
-    AccountRepository repository;
-    UserService userService;
+    AccountRepoImpl repository;
+    UserServiceImpl userService;
     private MockMvc mockMvc;
 
     @BeforeEach
     public void setup() {
-        repository = new AccountRepository(new DatabasePostgres(new DatabaseConfig()));
-        userService = new UserService(repository);
+        repository = new AccountRepoImpl(new DatabasePostgres(new DatabaseConfig()));
+        userService = new UserServiceImpl(repository);
         mockMvc = MockMvcBuilders.standaloneSetup(
                 new LoginController(userService),
                 new LogoutController(userService, repository),
@@ -73,7 +74,7 @@ public class ControllerTest {
 
     public void deleteOwnProfile(String token, String password, String userEmail) throws Exception {
         ObjectMapper objectMapper = new ObjectMapper();
-        String confirmationJson = objectMapper.writeValueAsString(new PasswordConfirmation(password));
+        String confirmationJson = objectMapper.writeValueAsString(new PasswordConfirmDto(password));
         // Send request for delete profile
         mockMvc.perform(post("/api/profile/delete")
                         .header(HttpHeaders.AUTHORIZATION, token)
@@ -133,7 +134,7 @@ public class ControllerTest {
 
         // Admin tries to delete user
         String token = loginResult.getResponse().getHeader("Authorization");
-        AdminActionDto actionDto = new AdminActionDto(email, AccountRepository.ProfileAction.DELETE);
+        AdminActionDto actionDto = new AdminActionDto(email, ProfileAction.DELETE);
         String actionJson = objectMapper.writeValueAsString(actionDto);
         mockMvc.perform(post("/api/admin")
                         .header(HttpHeaders.AUTHORIZATION, token)

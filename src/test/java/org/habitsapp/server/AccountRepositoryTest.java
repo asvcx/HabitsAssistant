@@ -3,20 +3,20 @@ package org.habitsapp.server;
 import org.habitsapp.models.Habit;
 import org.habitsapp.models.User;
 import org.habitsapp.server.migration.DatabaseConfig;
-import org.habitsapp.server.repository.AccountRepository;
+import org.habitsapp.server.repository.AccountRepoImpl;
 import org.habitsapp.models.results.AuthorizationResult;
 import org.habitsapp.server.repository.DatabasePostgres;
-import org.habitsapp.server.service.HabitService;
-import org.habitsapp.server.service.UserService;
+import org.habitsapp.server.service.HabitServiceImpl;
+import org.habitsapp.server.service.UserServiceImpl;
 import org.junit.jupiter.api.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class AccountRepositoryTest {
 
-    AccountRepository repository;
-    private UserService userService;
-    private HabitService habitService;
+    AccountRepoImpl repository;
+    private UserServiceImpl userService;
+    private HabitServiceImpl habitService;
 
     private final User user = new User("Name", "name@mail.ru", "UserPass");
     private final Habit habit = new Habit("Title", "Description", 1);
@@ -27,12 +27,12 @@ public class AccountRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        repository = new AccountRepository(new DatabasePostgres(new DatabaseConfig()));
+        repository = new AccountRepoImpl(new DatabasePostgres(new DatabaseConfig()));
         repository.loadUser(existingUser);
         repository.loadHabit(existingUser.getEmail(), existingHabit);
         repository.addToken(token, existingUser);
-        userService = new UserService(repository);
-        habitService = new HabitService(repository);
+        userService = new UserServiceImpl(repository);
+        habitService = new HabitServiceImpl(repository);
     }
 
     @Test
@@ -101,8 +101,8 @@ public class AccountRepositoryTest {
     void shouldAuthorizeUserAndThenReturnUserOrNull() {
         AuthorizationResult correctAuthResult = userService.authorizeUser(existingUser.getEmail(), "ExistingPass");
         AuthorizationResult wrongAuthResult = userService.authorizeUser(existingUser.getEmail(), "WrongPass");
-        assertThat(correctAuthResult.isSuccess()).isTrue();
-        assertThat(wrongAuthResult.isSuccess()).isFalse();
+        assertThat(correctAuthResult.success()).isTrue();
+        assertThat(wrongAuthResult.success()).isFalse();
     }
 
     @Test

@@ -21,6 +21,14 @@ public class DatabaseConfig {
     private String tblHabitsName;
     private String tblDatesName;
 
+    static {
+        try {
+            Class.forName("org.postgresql.Driver");
+        } catch (ClassNotFoundException e) {
+            throw new ExceptionInInitializerError("Failed to load PostgreSQL driver: " + e.getMessage());
+        }
+    }
+
     public DatabaseConfig() {
         Yaml yaml = new Yaml();
         try (InputStream in = getClass().getClassLoader().getResourceAsStream(DB_PROPERTIES_PATH)) {

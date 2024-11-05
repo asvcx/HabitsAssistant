@@ -8,12 +8,12 @@ import java.time.Instant;
 public class DBHabitMapper implements ResultSetMapper<Habit> {
 
     public Habit mapToObj(ResultSet resultSet) throws SQLException {
-        int id = resultSet.getInt("HabitID");
-        long userID = resultSet.getLong("UserID");
-        String title = resultSet.getString("Title");
-        String description = resultSet.getString("Description");
-        int period = resultSet.getInt("Period");
-        Instant date = resultSet.getTimestamp("StartDate").toInstant();
+        int id = resultSet.getInt("habit_id");
+        long userID = resultSet.getLong("user_id");
+        String title = resultSet.getString("title");
+        String description = resultSet.getString("description");
+        int period = resultSet.getInt("period");
+        Instant date = resultSet.getTimestamp("start_date").toInstant();
 
         return new Habit(id, title, description, period, date, userID);
     }

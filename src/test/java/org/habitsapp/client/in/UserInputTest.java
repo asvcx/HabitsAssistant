@@ -1,7 +1,7 @@
 package org.habitsapp.client.in;
 
 import org.habitsapp.server.migration.DatabaseConfig;
-import org.habitsapp.server.repository.AccountRepository;
+import org.habitsapp.server.repository.AccountRepoImpl;
 import org.habitsapp.models.Habit;
 import org.habitsapp.models.User;
 import org.habitsapp.client.session.Session;
@@ -23,12 +23,12 @@ import static org.habitsapp.client.in.UserInput.isEmailValid;
 
 public class UserInputTest {
 
-    AccountRepository repository;
+    AccountRepoImpl repository;
     private final UserInput userInput = new UserInputByConsole();
 
     @BeforeEach
     void setUp() {
-        repository = new AccountRepository(new DatabasePostgres(new DatabaseConfig()));
+        repository = new AccountRepoImpl(new DatabasePostgres(new DatabaseConfig()));
     }
 
     @Test

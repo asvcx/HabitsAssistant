@@ -3,8 +3,7 @@ package org.habitsapp.exchange;
 import lombok.*;
 import org.habitsapp.models.AccessLevel;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class SessionDto {

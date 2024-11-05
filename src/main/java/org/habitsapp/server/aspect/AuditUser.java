@@ -25,7 +25,7 @@ public class AuditUser {
         String email = ((UserDto) args[0]).getEmail();
         Object methodResult = joinPoint.proceed();
         if (methodResult instanceof RegistrationResult result) {
-            if (result.isSuccess()) {
+            if (result.success()) {
                 logger.info("User [{}] has been registered", email);
             } else {
                 logger.info("User [{}] failed to register", email);
@@ -46,7 +46,7 @@ public class AuditUser {
         Object methodResult = joinPoint.proceed();
         if (methodResult instanceof AuthorizationResult) {
             AuthorizationResult result = (AuthorizationResult) methodResult;
-            if (result.isSuccess()) {
+            if (result.success()) {
                 logger.info("User [{}] has been authorized", email);
             } else {
                 logger.info("User [{}] failed to authorize", email);

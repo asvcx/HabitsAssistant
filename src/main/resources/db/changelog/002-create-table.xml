@@ -9,43 +9,43 @@
         <changeSet id="002-create-table" author="asvcx">
 
             <createTable tableName="users" schemaName="habits_model_schema" remarks="Table for user accounts">
-                <column name="UserID" type="BIGINT" remarks="Identifier of the user">
+                <column name="user_id" type="BIGINT" remarks="Identifier of the user">
                     <constraints primaryKey="true" nullable="false"/>
                 </column>
-                <column name="UserName" type="VARCHAR(255)" remarks="Name or alias of the user"/>
-                <column name="Password" type="VARCHAR(255)" remarks="Password for the user account"/>
-                <column name="Email" type="VARCHAR(255)" remarks="User email address">
+                <column name="user_name" type="VARCHAR(255)" remarks="Name or alias of the user"/>
+                <column name="password" type="VARCHAR(255)" remarks="Password for the user account"/>
+                <column name="email" type="VARCHAR(255)" remarks="User email address">
                     <constraints unique="true" nullable="false"/>
                 </column>
-                <column name="Blocked" type="BOOLEAN" remarks="Indicates whether the user account is blocked"/>
-                <column name="AccessLevel" type="habits_model_schema.access_level" remarks="Determines access to administrative features"/>
+                <column name="blocked" type="BOOLEAN" remarks="Indicates whether the user account is blocked"/>
+                <column name="access_level" type="habits_model_schema.access_level" remarks="Determines access to administrative features"/>
             </createTable>
 
             <createTable tableName="habits" schemaName="habits_model_schema" remarks="Table for habits of users">
-                <column name="HabitID" type="BIGINT" remarks="Identifier of the habit">
+                <column name="habit_id" type="BIGINT" remarks="Identifier of the habit">
                     <constraints primaryKey="true" nullable="false"/>
                 </column>
-                <column name="UserID" type="BIGINT" remarks="Identifier of the user associated with the habit">
+                <column name="user_id" type="BIGINT" remarks="Identifier of the user associated with the habit">
                     <constraints nullable="false"/>
                 </column>
-                <column name="Title" type="VARCHAR(255)" remarks="Title of the habit">
+                <column name="title" type="VARCHAR(255)" remarks="Title of the habit">
                     <constraints nullable="false"/>
                 </column>
-                <column name="Description" type="VARCHAR(255)" remarks="Description of the habit"/>
-                <column name="Period" type="INT" remarks="Period for completing the habit in days">
+                <column name="description" type="VARCHAR(255)" remarks="Description of the habit"/>
+                <column name="period" type="INT" remarks="Period for completing the habit in days">
                     <constraints nullable="false"/>
                 </column>
-                <column name="StartDate" type="TIMESTAMP WITHOUT TIME ZONE" remarks="Start date of the habit"/>
+                <column name="start_date" type="TIMESTAMP WITHOUT TIME ZONE" remarks="Start date of the habit"/>
             </createTable>
 
             <createTable tableName="completion_dates" schemaName="habits_model_schema" remarks="Table for completion dates of habits">
-                <column name="UserID" type="BIGINT" remarks="Identifier of the user associated with completed habit">
+                <column name="user_id" type="BIGINT" remarks="Identifier of the user associated with completed habit">
                     <constraints nullable="false"/>
                 </column>
-                <column name="Title" type="VARCHAR(255)" remarks="Title of the completed habit">
+                <column name="title" type="VARCHAR(255)" remarks="Title of the completed habit">
                     <constraints nullable="false"/>
                 </column>
-                <column name="CompletionDate" type="TIMESTAMP WITHOUT TIME ZONE" remarks="Date when the habit was completed">
+                <column name="completion_date" type="TIMESTAMP WITHOUT TIME ZONE" remarks="Date when the habit was completed">
                     <constraints nullable="false"/>
                 </column>
             </createTable>
@@ -54,35 +54,35 @@
                     constraintName="pk_completion_dates"
                     schemaName="habits_model_schema"
                     tableName="completion_dates"
-                    columnNames="UserID,Title,CompletionDate"
+                    columnNames="user_id,title,completion_date"
             />
 
             <addUniqueConstraint
-                    constraintName="uq_habits_UserID_Title"
+                    constraintName="uq_habits_user_id_title"
                     tableName="habits"
-                    columnNames="UserID,Title"
+                    columnNames="user_id,title"
                     schemaName="habits_model_schema"/>
 
             <addForeignKeyConstraint
-                    constraintName="fk_habits_UserID"
+                    constraintName="fk_habits_user_id"
                     referencedTableSchemaName="habits_model_schema"
                     baseTableSchemaName="habits_model_schema"
                     baseTableName="habits"
-                    baseColumnNames="UserID"
+                    baseColumnNames="user_id"
                     referencedTableName="users"
-                    referencedColumnNames="UserID"
+                    referencedColumnNames="user_id"
                     onUpdate="CASCADE"
                     onDelete="CASCADE"
             />
 
             <addForeignKeyConstraint
-                    constraintName="fk_completion_dates_HabitID"
+                    constraintName="fk_completion_dates_habit_id"
                     referencedTableSchemaName="habits_model_schema"
                     baseTableSchemaName="habits_model_schema"
                     baseTableName="completion_dates"
-                    baseColumnNames="Title,UserID"
+                    baseColumnNames="title,user_id"
                     referencedTableName="habits"
-                    referencedColumnNames="Title,UserID"
+                    referencedColumnNames="title,user_id"
                     onUpdate="CASCADE"
                     onDelete="CASCADE"
             />

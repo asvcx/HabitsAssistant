@@ -8,9 +8,8 @@ import org.habitsapp.models.User;
 import org.habitsapp.models.dto.HabitDto;
 import org.habitsapp.models.dto.HabitMapper;
 import org.habitsapp.models.results.HabitCreationResult;
-import org.habitsapp.server.repository.AccountRepository;
+import org.habitsapp.server.repository.AccountRepo;
 import org.habitsapp.server.service.HabitService;
-import org.habitsapp.server.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,13 +23,11 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/habits")
 public class HabitController {
-    UserService userService;
-    HabitService habitService;
-    AccountRepository repository;
+    private final HabitService habitService;
+    private final AccountRepo repository;
 
     @Autowired
-    public HabitController(UserService userService, HabitService habitService, AccountRepository repository) {
-        this.userService = userService;
+    public HabitController(HabitService habitService, AccountRepo repository) {
         this.habitService = habitService;
         this.repository = repository;
     }
@@ -72,7 +69,7 @@ public class HabitController {
         }
         // Try to create habit
         HabitCreationResult result = habitService.createHabit(user.get().getEmail(), token, habitDto);
-        if (result.isSuccess()) {
+        if (result.success()) {
             return ResponseEntity.ok().body(new MessageDto("Habit has been created"));
         } else {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(new MessageDto("Failed to create a habit"));
