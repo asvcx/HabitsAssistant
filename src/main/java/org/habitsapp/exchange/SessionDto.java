@@ -1,7 +1,7 @@
 package org.habitsapp.exchange;
 
 import lombok.*;
-import org.habitsapp.models.AccessLevel;
+import org.habitsapp.model.AccessLevel;
 
 @Data
 @NoArgsConstructor

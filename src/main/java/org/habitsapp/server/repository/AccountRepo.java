@@ -1,7 +1,7 @@
 package org.habitsapp.server.repository;
 
-import org.habitsapp.models.Habit;
-import org.habitsapp.models.User;
+import org.habitsapp.model.Habit;
+import org.habitsapp.model.User;
 
 import java.util.List;
 import java.util.Map;
@@ -9,28 +9,34 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 public interface AccountRepo {
-    boolean isUserExists(String email);
-    boolean isUserExists(long id);
-    boolean isUserAuthorized(String token);
-    boolean loadUser(User user);
-    boolean createUser(User user);
-    boolean replaceUser(String email, String token, User changedUser);
-    boolean cancelToken(String token);
-    boolean deleteUser(String email, String token);
-    boolean updateUser(String email, Consumer<User> userAction);
-    boolean loadHabit(String email, Habit habit);
-    boolean changeHabitProperties(String email, Habit oldHabit, Habit newHabit);
-    boolean createHabit(String email, Habit habit);
-    boolean setHabits(long userID, List<Habit> habitsList);
-    boolean deleteHabit(String email, String title);
+    List<User> getUsers();
     Optional<User> getUserByEmail(String email);
-    boolean isTokenExists(String token);
-    Optional<User> getUserByToken(String token);
-    void addToken(String token, User user);
-    boolean removeToken(String token);
-    boolean checkToken(String email, String token);
-    boolean checkPassword(String email, String password);
+    Optional<User> getUserById(long id);
     Optional<Map<String,Habit>> getHabitsOfUser(String email);
     Optional<Habit> getHabitByTitle(String email, String title);
-    List<User> getUsers();
+
+    boolean isUserExists(String email);
+    boolean isUserExists(long id);
+
+    boolean createUser(User user);
+    boolean updateUser(String email, String token, User changedUser);
+    boolean updateUser(String email, Consumer<User> userAction);
+    boolean deleteUser(String email, String token);
+
+    boolean createHabit(String email, Habit habit);
+    boolean updateHabit(String email, Habit oldHabit, Habit newHabit);
+    boolean markHabit(String email, Habit habit);
+    boolean deleteHabit(String email, String title);
+
+//    boolean isTokenExists(String token);
+//    boolean isUserAuthorized(String token);
+//    Optional<User> getUserByToken(String token);
+//    void addToken(String token, User user);
+//    boolean removeToken(String token);
+//    boolean checkToken(String email, String token);
+//    boolean cancelToken(String token);
+
+    boolean checkPassword(String email, String password);
+
+
 }

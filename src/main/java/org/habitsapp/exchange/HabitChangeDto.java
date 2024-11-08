@@ -1,7 +1,7 @@
 package org.habitsapp.exchange;
 
 import lombok.*;
-import org.habitsapp.models.dto.HabitDto;
+import org.habitsapp.model.dto.HabitDto;
 
 @Data
 @NoArgsConstructor

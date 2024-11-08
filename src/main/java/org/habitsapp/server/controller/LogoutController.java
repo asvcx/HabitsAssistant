@@ -1,6 +1,7 @@
 package org.habitsapp.server.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.habitsapp.exchange.MessageDto;
 import org.habitsapp.server.repository.AccountRepo;
 import org.habitsapp.server.service.UserService;
@@ -9,20 +10,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
 @RequestMapping("/api/logout")
+@RequiredArgsConstructor
 public class LogoutController {
 
     private final UserService userService;
     private final AccountRepo repository;
-
-    @Autowired
-    public LogoutController(UserService userService, AccountRepo repository) {
-        this.userService = userService;
-        this.repository = repository;
-    }
 
     /**
      * Logout from profile

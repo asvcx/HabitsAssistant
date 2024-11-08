@@ -1,39 +1,39 @@
 package org.habitsapp.server.service;
 
-import org.habitsapp.models.results.AuthorizationResult;
-import org.habitsapp.models.results.RegistrationResult;
-import org.habitsapp.models.AccessLevel;
-import org.habitsapp.models.User;
-import org.habitsapp.models.dto.UserDto;
+import io.jsonwebtoken.Claims;
+import org.habitsapp.model.result.AuthorizationResult;
+import org.habitsapp.model.result.RegistrationResult;
+import org.habitsapp.model.AccessLevel;
+import org.habitsapp.model.User;
+import org.habitsapp.model.dto.UserDto;
 import org.habitsapp.server.repository.AccountRepo;
-import org.habitsapp.models.EntityStatus;
+import org.habitsapp.model.EntityStatus;
 import org.habitsapp.server.repository.ProfileAction;
+import org.habitsapp.server.security.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.security.SecureRandom;
-import java.util.Base64;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
-import static org.habitsapp.client.in.UserInput.isEmailValid;
-import static org.habitsapp.client.in.UserInput.isNameValid;
+import static org.habitsapp.model.UserValidator.isEmailValid;
+import static org.habitsapp.model.UserValidator.isNameValid;
 
 @Service
 public class UserServiceImpl implements UserService {
     private final AccountRepo repository;
+    private final JwtService jwt;
 
     @Autowired
-    public UserServiceImpl(AccountRepo repository) {
+    public UserServiceImpl(AccountRepo repository, JwtService jwt) {
         this.repository = repository;
+        this.jwt = jwt;
     }
 
-    private static String generateToken() {
-        SecureRandom secureRandom = new SecureRandom();
-        byte[] key = new byte[32];
-        secureRandom.nextBytes(key);
-        return Base64.getEncoder().encodeToString(key);
+    public String createToken(User user) {
+        Map<String,String> payload = new HashMap<>();
+        payload.put("email", user.getEmail().toLowerCase());
+        payload.put("access", user.getAccessLevel().name());
+        return jwt.generateJwt(payload, user.getName(), String.valueOf(user.getId()));
     }
 
     public AuthorizationResult authorizeUser(String email, String password) {
@@ -46,20 +46,12 @@ public class UserServiceImpl implements UserService {
         if (user.isBlocked()) {
             return new AuthorizationResult(false, "User with specified email is blocked", null, null);
         }
-        if (user.getAccountStatus() == EntityStatus.DELETED) {
-            return new AuthorizationResult(false, "User with specified email is deleted", null, null);
-        }
         if (!user.comparePassword(password)) {
             return new AuthorizationResult(false, "Specified password is wrong", null, null);
         }
-
-        String token;
-        do { token = generateToken();
-        } while (repository.isTokenExists(token));
-
+        String token = createToken(user);
         UserDto userDTO = new UserDto(user.getName(), user.getEmail(), user.getPassword(), user.getAccessLevel());
         AuthorizationResult result = new AuthorizationResult(true, "Authentication successful", token, userDTO);
-        repository.addToken(result.token(), user);
         return result;
     }
 
@@ -82,36 +74,40 @@ public class UserServiceImpl implements UserService {
     }
 
     public boolean logoutUser(String token) {
-        return repository.removeToken(token);
+        // return repository.removeToken(token);
+        return true;
     }
 
     public boolean deleteUser(String email, String token, String password) {
-        if (!repository.checkToken(email, token) || !repository.checkPassword(email, password)) {
+        Claims claims = jwt.extractClaims(token);
+        if (claims == null || !repository.checkPassword(email, password)) {
             return false;
         }
         return repository.deleteUser(email, token);
     }
 
     public List<String> getUsersInfo(String email, String token) {
-        if (email == null || token == null || !repository.isUserExists(email)) {
+        Claims claims = jwt.extractClaims(token);
+        if (claims == null || email == null || token == null || !repository.isUserExists(email)) {
             return new LinkedList<>();
         }
-        Optional<User> user = repository.getUserByToken(token);
+        Optional<User> user = repository.getUserByEmail(email);
         if (user.isEmpty() || !email.equals(user.get().getEmail())
                 || user.get().getAccessLevel() != AccessLevel.ADMIN) {
             return new LinkedList<>();
         }
         List<User> userSet = repository.getUsers();
         return userSet.stream()
-                .filter(u -> u.getAccountStatus() != EntityStatus.DELETED)
+                //.filter(u -> u.getAccountStatus() != EntityStatus.DELETED)
                 .map(User::toString)
                 .toList();
     }
 
     public boolean manageUserProfile(String email, String token, String emailToManage, ProfileAction profileAction) {
-        Optional<User> adminOpt = repository.getUserByToken(token);
+        Claims claims = jwt.extractClaims(token);
+        Optional<User> adminOpt = repository.getUserByEmail(email);
         Optional<User> userOpt = repository.getUserByEmail(emailToManage);
-        if (adminOpt.isEmpty() || userOpt.isEmpty()
+        if (claims == null || adminOpt.isEmpty() || userOpt.isEmpty()
             || adminOpt.get().getAccessLevel() != AccessLevel.ADMIN) {
             return false;
         }
@@ -138,8 +134,8 @@ public class UserServiceImpl implements UserService {
     }
 
     public boolean editUserData(String email, String token, String newEmail, String newName) {
-        email = email.toLowerCase();
-        if (!repository.checkToken(email, token) || newEmail == null || newName == null) {
+        Claims claims = jwt.extractClaims(token);
+        if (claims == null || newEmail == null || newName == null) {
             return false;
         }
         if (!isEmailValid(newEmail) || !isNameValid(newName)) {
@@ -151,12 +147,12 @@ public class UserServiceImpl implements UserService {
         }
         user.get().setEmail(newEmail);
         user.get().setName(newName);
-        return repository.replaceUser(email, token, user.get());
+        return repository.updateUser(email, token, user.get());
     }
 
     public boolean editUserPassword(String email, String token, String oldPassword, String newPassword) {
-        if (!repository.checkPassword(email, oldPassword)
-                || !repository.checkToken(email, token)) {
+        Claims claims = jwt.extractClaims(token);
+        if (claims == null || !repository.checkPassword(email, oldPassword)) {
             return false;
         }
         Optional<User> user = repository.getUserByEmail(email.toLowerCase());
@@ -165,7 +161,7 @@ public class UserServiceImpl implements UserService {
         }
         if (user.get().comparePassword(oldPassword)) {
             user.get().setPassword(newPassword);
-            return repository.replaceUser(email, token, user.get());
+            return repository.updateUser(email, token, user.get());
         } else {
             return false;
         }

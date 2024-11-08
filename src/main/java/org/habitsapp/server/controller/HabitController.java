@@ -1,16 +1,16 @@
 package org.habitsapp.server.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.habitsapp.exchange.HabitChangeDto;
 import org.habitsapp.exchange.MessageDto;
-import org.habitsapp.models.Habit;
-import org.habitsapp.models.User;
-import org.habitsapp.models.dto.HabitDto;
-import org.habitsapp.models.dto.HabitMapper;
-import org.habitsapp.models.results.HabitCreationResult;
+import org.habitsapp.model.Habit;
+import org.habitsapp.model.User;
+import org.habitsapp.model.dto.HabitDto;
+import org.habitsapp.model.dto.HabitMapper;
+import org.habitsapp.model.result.HabitCreationResult;
 import org.habitsapp.server.repository.AccountRepo;
 import org.habitsapp.server.service.HabitService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,24 +22,20 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/habits")
+@RequiredArgsConstructor
 public class HabitController {
     private final HabitService habitService;
     private final AccountRepo repository;
-
-    @Autowired
-    public HabitController(HabitService habitService, AccountRepo repository) {
-        this.habitService = habitService;
-        this.repository = repository;
-    }
 
     /**
      *  Get list of habits
      */
     @GetMapping
-    protected ResponseEntity<Set<HabitDto>> getHabitsList(HttpServletRequest req) {
+    protected ResponseEntity<Set<HabitDto>> getAll(HttpServletRequest req) {
         // Check token
         String token = TokenReader.readToken(req, repository);
-        Optional<User> user = repository.getUserByToken(token);
+        long id = (long) req.getAttribute("id");
+        Optional<User> user = repository.getUserById(id);
         if (user.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -49,21 +45,17 @@ public class HabitController {
                         .map(HabitMapper.INSTANCE::habitToHabitDto)
                         .collect(Collectors.toSet()))
                 .orElse(Collections.emptySet());
-
-        if(repository.isUserAuthorized(token)) {
-            return ResponseEntity.ok().body(habitsDto);
-        } else {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
-        }
+        return ResponseEntity.ok().body(habitsDto);
     }
 
     /**
      *  Create a new habit
      */
     @PostMapping
-    protected ResponseEntity<MessageDto> createHabit(@RequestBody HabitDto habitDto, HttpServletRequest req) {
+    protected ResponseEntity<MessageDto> create(@RequestBody HabitDto habitDto, HttpServletRequest req) {
         String token = TokenReader.readToken(req, repository);
-        Optional<User> user = repository.getUserByToken(token);
+        long id = (long) req.getAttribute("id");
+        Optional<User> user = repository.getUserById(id);
         if(habitDto == null || user.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -80,13 +72,14 @@ public class HabitController {
      *  Change existing habit
      */
     @PutMapping
-    protected ResponseEntity<MessageDto> changeHabit(@RequestBody HabitChangeDto hbtChange, HttpServletRequest req) {
+    protected ResponseEntity<MessageDto> change(@RequestBody HabitChangeDto hbtChange, HttpServletRequest req) {
         String token = TokenReader.readToken(req, repository);
         if (token == null || token.isEmpty() || hbtChange == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         // Try to change habit
-        Optional<User> user = repository.getUserByToken(token);
+        long id = (long) req.getAttribute("id");
+        Optional<User> user = repository.getUserById(id);
         Habit oldHabit = HabitMapper.INSTANCE.habitDtoToHabit(hbtChange.getOldHabit());
         Habit newHabit = HabitMapper.INSTANCE.habitDtoToHabit(hbtChange.getNewHabit());
         boolean isChanged = user.isPresent() &&
@@ -102,7 +95,7 @@ public class HabitController {
      *  Change existing habit
      */
     @PutMapping("/mark")
-    protected ResponseEntity<MessageDto> markHabit(HttpServletRequest req) {
+    protected ResponseEntity<MessageDto> mark(HttpServletRequest req) {
         // Check token
         String token = TokenReader.readToken(req, repository);
         if (token == null || token.isEmpty()) {
@@ -114,7 +107,8 @@ public class HabitController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new MessageDto("Habit title has not been provided"));
         }
-        Optional<User> user = repository.getUserByToken(token);
+        long id = (long) req.getAttribute("id");
+        Optional<User> user = repository.getUserById(id);
         boolean isMarked = user.isPresent()
                 && habitService.markHabitAsCompleted(user.get().getEmail(), token, habitTitle);
         if(isMarked) {
@@ -130,10 +124,11 @@ public class HabitController {
      *  Delete existing habit
      */
     @DeleteMapping
-    protected ResponseEntity<MessageDto> deleteHabit(@RequestParam("title") String habitTitle, HttpServletRequest req) {
+    protected ResponseEntity<MessageDto> delete(@RequestParam("title") String habitTitle, HttpServletRequest req) {
         // Check token
         String token = TokenReader.readToken(req, repository);
-        Optional<User> user = repository.getUserByToken(token);
+        long id = (long) req.getAttribute("id");
+        Optional<User> user = repository.getUserById(id);
         if (token == null || token.isEmpty() || user.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }

@@ -1,8 +1,8 @@
 package org.habitsapp.server.service;
 
-import org.habitsapp.models.Habit;
-import org.habitsapp.models.dto.HabitDto;
-import org.habitsapp.models.results.HabitCreationResult;
+import org.habitsapp.model.Habit;
+import org.habitsapp.model.dto.HabitDto;
+import org.habitsapp.model.result.HabitCreationResult;
 
 public interface HabitService {
     HabitCreationResult createHabit(String email, String token, HabitDto habitDto);

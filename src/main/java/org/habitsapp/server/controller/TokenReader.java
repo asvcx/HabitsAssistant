@@ -7,14 +7,10 @@ public class TokenReader {
 
     public static String readToken(HttpServletRequest req, AccountRepo repo) {
         String token = req.getHeader("Authorization");
-        if (token == null || !token.startsWith("Token ")) {
+        if (token == null || !token.startsWith("Bearer ")) {
             return null;
         }
-        String tokenValue = token.substring(6);
-        if (!repo.isUserAuthorized(tokenValue)) {
-            return null;
-        }
-        return tokenValue;
+        return token.substring(7);
     }
 
 }

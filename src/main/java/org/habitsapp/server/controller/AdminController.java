@@ -1,14 +1,14 @@
 package org.habitsapp.server.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.habitsapp.exchange.AdminActionDto;
 import org.habitsapp.exchange.MessageDto;
-import org.habitsapp.models.AccessLevel;
-import org.habitsapp.models.User;
+import org.habitsapp.model.AccessLevel;
+import org.habitsapp.model.User;
 import org.habitsapp.server.repository.AccountRepo;
 import org.habitsapp.server.service.UserService;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,21 +16,17 @@ import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/admin")
+@RequiredArgsConstructor
 public class AdminController {
 
     private final UserService userService;
     private final AccountRepo repository;
 
-    @Autowired
-    public AdminController(UserService userService, AccountRepo repository) {
-        this.userService = userService;
-        this.repository = repository;
-    }
-
     @GetMapping
     public ResponseEntity<List<String>> getUsersInfo(HttpServletRequest req) {
         String token = TokenReader.readToken(req, repository);
-        Optional<User> admin = repository.getUserByToken(token);
+        long id = (long) req.getAttribute("id");
+        Optional<User> admin = repository.getUserById(id);
 
         if (token == null || token.isEmpty() || admin.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -53,7 +49,8 @@ public class AdminController {
             return ResponseEntity.badRequest().body(new MessageDto("Bad request"));
         }
 
-        Optional<User> admin = repository.getUserByToken(token);
+        long id = (long) req.getAttribute("id");
+        Optional<User> admin = repository.getUserById(id);
         Optional<User> user = repository.getUserByEmail(actionDto.getEmailToManage());
 
         boolean isManaged = admin.isPresent() && user.isPresent()

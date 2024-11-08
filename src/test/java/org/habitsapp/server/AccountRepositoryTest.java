@@ -1,14 +1,16 @@
 package org.habitsapp.server;
 
-import org.habitsapp.models.Habit;
-import org.habitsapp.models.User;
+import org.habitsapp.model.Habit;
+import org.habitsapp.model.User;
 import org.habitsapp.server.migration.DatabaseConfig;
 import org.habitsapp.server.repository.AccountRepoImpl;
-import org.habitsapp.models.results.AuthorizationResult;
+import org.habitsapp.model.result.AuthorizationResult;
 import org.habitsapp.server.repository.DatabasePostgres;
+import org.habitsapp.server.security.JwtService;
 import org.habitsapp.server.service.HabitServiceImpl;
 import org.habitsapp.server.service.UserServiceImpl;
 import org.junit.jupiter.api.*;
+import java.security.NoSuchAlgorithmException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -23,17 +25,26 @@ public class AccountRepositoryTest {
     private final User existingUser = new User("ExistingName", "existing@mail.ru", "ExistingPass");
     private final Habit existingHabit = new Habit("ExistingTitle", "ExistingDescription", 1);
 
-    private final String token = "ExistingToken";
+    private String token;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws NoSuchAlgorithmException {
         repository = new AccountRepoImpl(new DatabasePostgres(new DatabaseConfig()));
-        repository.loadUser(existingUser);
-        repository.loadHabit(existingUser.getEmail(), existingHabit);
-        repository.addToken(token, existingUser);
-        userService = new UserServiceImpl(repository);
-        habitService = new HabitServiceImpl(repository);
+        repository.createUser(existingUser);
+        repository.createHabit(existingUser.getEmail(), existingHabit);
+        JwtService jwt = new JwtService();
+        userService = new UserServiceImpl(repository, jwt);
+        habitService = new HabitServiceImpl(repository, jwt);
+        token = userService.createToken(existingUser);
     }
+
+    @AfterEach
+    void tearDown() throws NoSuchAlgorithmException {
+        repository = new AccountRepoImpl(new DatabasePostgres(new DatabaseConfig()));
+        repository.deleteHabit(existingUser.getEmail(), existingHabit.getTitle());
+        repository.deleteUser(existingUser.getEmail(), token);
+    }
+
 
     @Test
     @DisplayName("Should add a user to the collection and then remove them")
@@ -139,7 +150,7 @@ public class AccountRepositoryTest {
         // Then
         assertThat(repository.isUserExists(existingUser.getEmail())).isFalse();
         // When
-        repository.loadUser(existingUser);
+        repository.createUser(existingUser);
         // Then
         assertThat(repository.isUserExists(existingUser.getEmail())).isTrue();
     }

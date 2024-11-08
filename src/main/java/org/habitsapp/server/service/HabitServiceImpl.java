@@ -1,10 +1,11 @@
 package org.habitsapp.server.service;
 
-import org.habitsapp.models.results.HabitCreationResult;
-import org.habitsapp.models.EntityStatus;
-import org.habitsapp.models.Habit;
-import org.habitsapp.models.dto.HabitDto;
+import io.jsonwebtoken.Claims;
+import org.habitsapp.model.result.HabitCreationResult;
+import org.habitsapp.model.Habit;
+import org.habitsapp.model.dto.HabitDto;
 import org.habitsapp.server.repository.AccountRepo;
+import org.habitsapp.server.security.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,14 +15,17 @@ import java.util.Optional;
 @Service
 public class HabitServiceImpl implements HabitService {
     private final AccountRepo repository;
+    private final JwtService jwt;
 
     @Autowired
-    public HabitServiceImpl(AccountRepo repository) {
+    public HabitServiceImpl(AccountRepo repository, JwtService jwt) {
         this.repository = repository;
+        this.jwt = jwt;
     }
 
     public HabitCreationResult createHabit(String email, String token, HabitDto habitDto) {
-        if (!repository.checkToken(email, token)) {
+        Claims claims = jwt.extractClaims(token);
+        if (claims == null) {
             return new HabitCreationResult(false, "You are not logged in");
         }
         Optional<Habit> habitOpt = repository.getHabitByTitle(email, habitDto.getTitle());
@@ -37,7 +41,8 @@ public class HabitServiceImpl implements HabitService {
     }
 
     public boolean markHabitAsCompleted(String email, String token, String habitTitle) {
-        if (!repository.checkToken(email, token)) {
+        Claims claims = jwt.extractClaims(token);
+        if (claims == null) {
             return false;
         }
         Optional<Map<String,Habit>> habits = repository.getHabitsOfUser(email);
@@ -45,27 +50,29 @@ public class HabitServiceImpl implements HabitService {
             return false;
         }
         Optional<Habit> habit = repository.getHabitByTitle(email, habitTitle);
-        if (habit.isEmpty() || habit.get().getStatus() == EntityStatus.DELETED) {
+        if (habit.isEmpty()) {
             return false;
         }
         habit.get().markAsCompleted();
-        habit.get().setStatus(EntityStatus.UPDATED);
+        repository.markHabit(email.toLowerCase(), habit.get());
         return true;
     }
 
     public boolean editHabit(String email, String token, Habit oldHabit, Habit newHabit) {
-        if (!repository.checkToken(email, token)) {
+        Claims claims = jwt.extractClaims(token);
+        if (claims == null) {
             return false;
         }
         Optional<Map<String,Habit>> userHabits = repository.getHabitsOfUser(email);
         if (userHabits.isEmpty() || !userHabits.get().containsKey(oldHabit.getTitle())) {
             return false;
         }
-        return repository.changeHabitProperties(email, oldHabit, newHabit);
+        return repository.updateHabit(email, oldHabit, newHabit);
     }
 
     public boolean deleteHabit(String email, String token, String title) {
-        if (!repository.checkToken(email, token)) {
+        Claims claims = jwt.extractClaims(token);
+        if (claims == null) {
             return false;
         }
         return repository.deleteHabit(email, title);

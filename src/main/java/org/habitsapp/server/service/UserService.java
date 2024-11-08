@@ -1,8 +1,8 @@
 package org.habitsapp.server.service;
 
-import org.habitsapp.models.dto.UserDto;
-import org.habitsapp.models.results.AuthorizationResult;
-import org.habitsapp.models.results.RegistrationResult;
+import org.habitsapp.model.dto.UserDto;
+import org.habitsapp.model.result.AuthorizationResult;
+import org.habitsapp.model.result.RegistrationResult;
 import org.habitsapp.server.repository.ProfileAction;
 
 import java.util.List;

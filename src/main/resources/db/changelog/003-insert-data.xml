@@ -5,6 +5,7 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd"
         logicalFilePath="db/changelog.xml">
+
         <changeSet id="003-insert-data" author="asvcx">
 
             <insert tableName="users" schemaName="habits_model_schema">

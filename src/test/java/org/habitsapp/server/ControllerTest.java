@@ -2,15 +2,15 @@ package org.habitsapp.server;
 
 import org.habitsapp.exchange.AdminActionDto;
 import org.habitsapp.exchange.PasswordConfirmDto;
-import org.habitsapp.server.controller.AdminController;
-import org.habitsapp.server.controller.LogoutController;
-import org.habitsapp.server.controller.ProfileController;
+import org.habitsapp.model.dto.HabitDto;
+import org.habitsapp.server.controller.*;
 import org.habitsapp.server.repository.ProfileAction;
+import org.habitsapp.server.security.JwtService;
+import org.habitsapp.server.service.HabitServiceImpl;
 import org.junit.jupiter.api.*;
 import org.habitsapp.exchange.SessionDto;
-import org.habitsapp.models.AccessLevel;
-import org.habitsapp.models.dto.UserDto;
-import org.habitsapp.server.controller.LoginController;
+import org.habitsapp.model.AccessLevel;
+import org.habitsapp.model.dto.UserDto;
 import org.habitsapp.server.migration.DatabaseConfig;
 import org.habitsapp.server.repository.AccountRepoImpl;
 import org.habitsapp.server.repository.DatabasePostgres;
@@ -22,25 +22,49 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.security.NoSuchAlgorithmException;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class ControllerTest {
-    AccountRepoImpl repository;
-    UserServiceImpl userService;
-    private MockMvc mockMvc;
+    private static AccountRepoImpl repository;
+    private static UserServiceImpl userService;
+    private static HabitServiceImpl habitService;
+    private static MockMvc mockMvc;
 
-    @BeforeEach
-    public void setup() {
+    @BeforeAll
+    public static void setup() throws NoSuchAlgorithmException {
         repository = new AccountRepoImpl(new DatabasePostgres(new DatabaseConfig()));
-        userService = new UserServiceImpl(repository);
+        JwtService jwt = new JwtService();
+        userService = new UserServiceImpl(repository, jwt);
+        habitService = new HabitServiceImpl(repository, jwt);
         mockMvc = MockMvcBuilders.standaloneSetup(
                 new LoginController(userService),
                 new LogoutController(userService, repository),
                 new ProfileController(userService, repository),
+                new HabitController(habitService, repository),
                 new AdminController(userService, repository))
                 .build();
+    }
+
+    @AfterAll
+    public static void tearDown() {
+
+    }
+
+    public void registerUser(String name, String email, String password, AccessLevel accessLevel) throws Exception {
+        // User tries to register
+        UserDto userDto = new UserDto(name, email, password, accessLevel);
+        ObjectMapper objectMapper = new ObjectMapper();
+        String userJson = objectMapper.writeValueAsString(userDto);
+        // Send request for register profile
+        mockMvc.perform(post("/api/profile")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(userJson))
+                .andExpect(status().isOk());
     }
 
     public MvcResult authorizeUser(String email, String password, AccessLevel accessLevel) throws Exception {
@@ -60,18 +84,6 @@ public class ControllerTest {
                 .andReturn();
     }
 
-    public void registerUser(String name, String email, String password, AccessLevel accessLevel) throws Exception {
-        // User tries to register
-        UserDto userDto = new UserDto(name, email, password, accessLevel);
-        ObjectMapper objectMapper = new ObjectMapper();
-        String userJson = objectMapper.writeValueAsString(userDto);
-        // Send request for register profile
-        mockMvc.perform(post("/api/profile")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(userJson))
-                .andExpect(status().isOk());
-    }
-
     public void deleteOwnProfile(String token, String password, String userEmail) throws Exception {
         ObjectMapper objectMapper = new ObjectMapper();
         String confirmationJson = objectMapper.writeValueAsString(new PasswordConfirmDto(password));
@@ -88,7 +100,6 @@ public class ControllerTest {
                         .header(HttpHeaders.AUTHORIZATION, token))
                 .andExpect(status);
     }
-
 
     @Test
     @DisplayName("User authorizes with an existing profile and then logout")
@@ -141,6 +152,31 @@ public class ControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(actionJson))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Register, Create habit then delete profile")
+    public void shouldManageHabit() throws Exception {
+        // Send request for register
+        registerUser("Bishop", "bishop@gmail.com", "123456", AccessLevel.USER);
+
+        // Send request for login
+        MvcResult loginResult = authorizeUser("bishop@gmail.com", "123456", AccessLevel.USER);
+        String token = loginResult.getResponse().getHeader("Authorization");
+
+        // Creating json with HabitDto
+        HabitDto habitDto = new HabitDto("title", "description", 1, 0);
+        ObjectMapper objectMapper = new ObjectMapper();
+        String habitJson = objectMapper.writeValueAsString(habitDto);
+        // Send request to create habit
+        mockMvc.perform(post("/api/habits")
+                        .header(HttpHeaders.AUTHORIZATION, token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(habitJson))
+                .andExpect(status().isOk());
+        // Send request for delete profile
+
+        deleteOwnProfile(token, "123456", "bishop@gmail.com");
     }
 
 }
