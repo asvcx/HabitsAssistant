@@ -1,0 +1,9 @@
+db:
+  url : jdbc:postgresql://localhost:5471/HabitsAppDB
+  username : HabitsApp
+  password : bbRhP686PPaNPps3mPaNmA
+  schema_name : habits_model_schema
+table:
+  users_name : users
+  habits_name : habits
+  dates_name : completion_dates

@@ -1,13 +1,16 @@
 package org.habitsapp.server.repository;
 
-import org.habitsapp.models.EntityStatus;
-import org.habitsapp.models.Habit;
-import org.habitsapp.models.User;
-import org.habitsapp.server.repository.dbmappers.DBHabitMapper;
-import org.habitsapp.server.repository.dbmappers.ResultSetMapper;
-import org.habitsapp.server.repository.dbmappers.DBUserMapper;
+import org.habitsapp.model.Habit;
+import org.habitsapp.model.User;
+import org.habitsapp.server.migration.DatabaseConfig;
+import org.habitsapp.server.repository.dbmapper.DBHabitMapper;
+import org.habitsapp.server.repository.dbmapper.ResultSetMapper;
+import org.habitsapp.server.repository.dbmapper.DBUserMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.DependsOn;
+import org.springframework.stereotype.Component;
 
 import java.sql.*;
 import java.time.Instant;
@@ -17,6 +20,8 @@ import java.util.*;
  * The Database class provides methods for interacting with the database,
  * including loading, saving, updating, and deleting user and habit data.
  */
+@Component
+@DependsOn("migration")
 public class DatabasePostgres implements Database {
     private static final Logger logger = LoggerFactory.getLogger(DatabasePostgres.class);
 
@@ -31,14 +36,15 @@ public class DatabasePostgres implements Database {
     /**
      * Create a Database instance with the specified connection parameters.
      */
-    public DatabasePostgres(Properties properties) {
-        DB_URL = properties.getProperty("db.url");
-        DB_USER_NAME = properties.getProperty("db.username");
-        DB_PASSWORD = properties.getProperty("db.password");
-        SCHEMA_NAME = properties.getProperty("schema.main.name");
-        TBL_USERS_NAME = properties.getProperty("table.users_name");
-        TBL_HABITS_NAME = properties.getProperty("table.habits_name");
-        TBL_DATES_NAME = properties.getProperty("table.dates_name");
+    @Autowired
+    public DatabasePostgres(DatabaseConfig dbConfig) {
+        DB_URL = dbConfig.getUrl();
+        DB_USER_NAME = dbConfig.getUsername();
+        DB_PASSWORD = dbConfig.getPassword();
+        SCHEMA_NAME = dbConfig.getSchemaName();
+        TBL_USERS_NAME = dbConfig.getTblUsersName();
+        TBL_HABITS_NAME = dbConfig.getTblHabitsName();
+        TBL_DATES_NAME = dbConfig.getTblDatesName();
     }
 
     private void handleSQLException(SQLException e) {
@@ -62,25 +68,11 @@ public class DatabasePostgres implements Database {
         return results;
     }
 
-    /**
-     * Load users from the database.
-     *
-     * @return a list of users loaded from the database
-     */
     public List<User> loadUsers() {
         String QUERY_LOAD_USERS = String.format("SELECT * FROM %s.%s;", SCHEMA_NAME, TBL_USERS_NAME);
-        List<User> users = executeQuery(QUERY_LOAD_USERS, new DBUserMapper());
-        for (User user : users) {
-            logger.info("User loaded from database. Email : [{}]; id : [{}]", user.getEmail(), user.getId());
-        }
-        return users;
+        return executeQuery(QUERY_LOAD_USERS, new DBUserMapper());
     }
 
-    /**
-     * Load habits from the database, grouped by user ID.
-     *
-     * @return a map where the key is the user ID and the value is a list of habits
-     */
     public Map<Long,List<Habit>> loadHabits() {
         String QUERY_LOAD_HABITS = String.format("SELECT * FROM %s.%s;", SCHEMA_NAME, TBL_HABITS_NAME);
         List<Habit> habits = executeQuery(QUERY_LOAD_HABITS, new DBHabitMapper());
@@ -93,18 +85,81 @@ public class DatabasePostgres implements Database {
         return habitsByUserID;
     }
 
+    public Optional<User> loadUser(long id) {
+        return loadUserByQuery("SELECT * FROM %s.%s WHERE \"user_id\" = ?;", id);
+    }
+
+    public Optional<User> loadUser(String email) {
+        return loadUserByQuery("SELECT * FROM %s.%s WHERE \"email\" = ?;", email);
+    }
+
+    /**
+     * Load user with specified id or email from the database.
+     *
+     * @return an Optional of the User
+     */
+    private Optional<User> loadUserByQuery(String queryTemplate, Object param) {
+        String query = String.format(queryTemplate, SCHEMA_NAME, TBL_USERS_NAME);
+        try(Connection connection = DriverManager.getConnection(DB_URL, DB_USER_NAME, DB_PASSWORD);
+            PreparedStatement pStatement = connection.prepareStatement(query)) {
+            if (param instanceof Long) {
+                pStatement.setLong(1, (Long) param);
+            } else if (param instanceof String) {
+                pStatement.setString(1, (String) param);
+            }
+            try (ResultSet resultSet = pStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    User user = new DBUserMapper().mapToObj(resultSet);
+                    logger.info("User loaded from database. Email : [{}]; id : [{}]", user.getEmail(), user.getId());
+                    return Optional.of(user);
+                }
+            } catch (SQLException e) {
+                handleSQLException(e);
+            }
+        }  catch (SQLException e) {
+            handleSQLException(e);
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Load habits for user with specified id.
+     *
+     * @return an Optional of User
+     */
+    public Map<String,Habit> loadHabits(long userId) {
+        String QUERY_LOAD_HABITS = String.format("SELECT * FROM %s.%s WHERE \"user_id\" = ?;", SCHEMA_NAME, TBL_HABITS_NAME);
+        Map<String,Habit> habits = new HashMap<>();
+        try(Connection connection = DriverManager.getConnection(DB_URL, DB_USER_NAME, DB_PASSWORD)) {
+            PreparedStatement pStatement = connection.prepareStatement(QUERY_LOAD_HABITS);
+            pStatement.setLong(1, userId);
+            try (ResultSet resultSet = pStatement.executeQuery()) {
+                while (resultSet.next()) {
+                    Habit habit = new DBHabitMapper().mapToObj(resultSet);
+                    loadDates(userId, habit);
+                    habits.put(habit.getTitle(), habit);
+                }
+            } catch (SQLException e) {
+                handleSQLException(e);
+            }
+        }  catch (SQLException e) {
+            handleSQLException(e);
+        }
+        return habits;
+    }
+
     /**
      * Load completion dates for specified habit.
      */
-    private void loadDates(long userID, Habit habit) {
-        String QUERY_LOAD_DATES = String.format("SELECT * FROM %s.%s WHERE \"UserID\" = ? AND \"Title\" = ?;", SCHEMA_NAME, TBL_DATES_NAME);
+    private void loadDates(long userId, Habit habit) {
+        String QUERY_LOAD_DATES = String.format("SELECT * FROM %s.%s WHERE \"user_id\" = ? AND \"title\" = ?;", SCHEMA_NAME, TBL_DATES_NAME);
         try(Connection connection = DriverManager.getConnection(DB_URL, DB_USER_NAME, DB_PASSWORD)) {
             PreparedStatement pStatement = connection.prepareStatement(QUERY_LOAD_DATES);
-            pStatement.setLong(1, userID);
+            pStatement.setLong(1, userId);
             pStatement.setString(2, habit.getTitle());
             try (ResultSet resultSet = pStatement.executeQuery()) {
                 while(resultSet.next()) {
-                    Instant date = resultSet.getTimestamp("CompletionDate").toInstant();
+                    Instant date = resultSet.getTimestamp("completion_date").toInstant();
                     habit.addCompletionDate(date);
                 }
             } catch (SQLException e) {
@@ -116,72 +171,66 @@ public class DatabasePostgres implements Database {
     }
 
     /**
-     * Save a list of users to the database.
+     * Save a user to the database.
      */
-    public void saveUsers(List<User> users) {
+    public boolean saveUser(User user) {
         String QUERY_SAVE_USER = String.format(
-                "INSERT INTO %s.%s (\"UserID\", \"UserName\", \"Email\", \"Password\", \"Blocked\", \"AccessLevel\")" +
-                " VALUES (nextval('habits_model_schema.user_seq'), ?, ?, ?, ?, ?)" +
-                " ON CONFLICT (\"UserID\") DO NOTHING RETURNING \"UserID\";",
+                "INSERT INTO %s.%s (\"user_id\", \"user_name\", \"email\", \"password\", \"blocked\", \"access_level\")" +
+                        " VALUES (nextval('habits_model_schema.user_seq'), ?, ?, ?, ?, ?)" +
+                        " ON CONFLICT (\"user_id\") DO NOTHING RETURNING \"user_id\";",
                 SCHEMA_NAME, TBL_USERS_NAME
         );
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER_NAME, DB_PASSWORD);
              PreparedStatement pStatement = connection.prepareStatement(QUERY_SAVE_USER)) {
-            for (User user : users) {
-                if (user.getAccountStatus() == EntityStatus.CREATED) {
-                    new DBUserMapper().mapFromObj(pStatement, user);
-                    ResultSet resultSet = pStatement.executeQuery();
-                    resultSet.next();
-                    long userId = resultSet.getLong("UserID");
-                    user.setId(userId);
-                    user.setAccountStatus(EntityStatus.STABLE);
-                    logger.info("User saved to database. Email : [{}]; id : [{}]", user.getEmail(), user.getId());
-                }
-            }
+            new DBUserMapper().mapFromObj(pStatement, user);
+            ResultSet resultSet = pStatement.executeQuery();
+            resultSet.next();
+            long userId = resultSet.getLong("user_id");
+            user.setId(userId);
+            logger.info("User saved to database. Email : [{}]; id : [{}]", user.getEmail(), user.getId());
         } catch (SQLException e) {
             handleSQLException(e);
         }
+        return false;
     }
 
     /**
-     * Save a list of habits to the database.
+     * Save a habit to the database.
      */
-    public void saveHabits(long userID, List<Habit> habits) {
+    public boolean saveHabit(long userId, Habit habit) {
         String QUERY_SAVE_HABIT = String.format(
-                "INSERT INTO %s.%s (\"HabitID\", \"UserID\", \"Title\", \"Description\", \"Period\", \"StartDate\")" +
-                " VALUES (nextval('habits_model_schema.habit_seq'), ?, ?, ?, ?, ?)" +
-                " ON CONFLICT (\"HabitID\") DO NOTHING;",
+                "INSERT INTO %s.%s (\"habit_id\", \"user_id\", \"title\", \"description\", \"period\", \"start_date\")" +
+                        " VALUES (nextval('habits_model_schema.habit_seq'), ?, ?, ?, ?, ?)" +
+                        " ON CONFLICT (\"habit_id\") DO NOTHING;",
                 SCHEMA_NAME, TBL_HABITS_NAME
         );
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER_NAME, DB_PASSWORD);
              PreparedStatement pStatement = connection.prepareStatement(QUERY_SAVE_HABIT)) {
-            for (Habit habit : habits) {
-                if (habit.getStatus() == EntityStatus.CREATED) {
-                    new DBHabitMapper().mapFromObj(pStatement, habit);
-                    pStatement.executeUpdate();
-                    saveDates(connection, userID, habit);
-                    habit.setStatus(EntityStatus.STABLE);
-                }
-            }
+            habit.setUserId(userId);
+            new DBHabitMapper().mapFromObj(pStatement, habit);
+            int result = pStatement.executeUpdate();
+            saveDates(connection, habit.getUserId(), habit);
+            return result > 0;
         } catch (SQLException e) {
             handleSQLException(e);
         }
+        return false;
     }
 
     /**
      * Save completion dates of specified habit.
      */
-    private void saveDates(Connection connection, long userID, Habit habit) {
+    private void saveDates(Connection connection, long userId, Habit habit) {
         String QUERY_SAVE_DATE = String.format(
-                "INSERT INTO %s.%s (\"UserID\", \"Title\", \"CompletionDate\")" +
+                "INSERT INTO %s.%s (\"user_id\", \"title\", \"completion_date\")" +
                 " VALUES (?, ?, ?)" +
-                " ON CONFLICT (\"UserID\", \"Title\", \"CompletionDate\") DO NOTHING;",
+                " ON CONFLICT (\"user_id\", \"title\", \"completion_date\") DO NOTHING;",
                 SCHEMA_NAME, TBL_DATES_NAME
         );
         try (PreparedStatement pStatement = connection.prepareStatement(QUERY_SAVE_DATE)) {
             Set<Instant> completionDates = habit.getCompletionDates();
             for (Instant date : completionDates) {
-                pStatement.setLong(1, userID);
+                pStatement.setLong(1, userId);
                 pStatement.setString(2, habit.getTitle());
                 pStatement.setTimestamp(3, Timestamp.from(date));
                 pStatement.executeUpdate();
@@ -192,72 +241,65 @@ public class DatabasePostgres implements Database {
     }
 
     /**
-     * Update users with status 'UPDATED'.
+     * Update a user with status 'UPDATED'.
      */
-    public void updateUsers(List<User> users) {
+    public boolean updateUser(User user) {
         String QUERY_UPDATE_USER = String.format(
-                "UPDATE %s.%s SET \"UserName\" = ?, \"Email\" = ?, \"Password\" = ?, \"Blocked\" = ?, \"AccessLevel\" = ?" +
-                " WHERE \"UserID\" = ?;",
+                "UPDATE %s.%s SET \"user_name\" = ?, \"email\" = ?, \"password\" = ?, \"blocked\" = ?, \"access_level\" = ?" +
+                        " WHERE \"user_id\" = ?;",
                 SCHEMA_NAME, TBL_USERS_NAME
         );
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER_NAME, DB_PASSWORD);
              PreparedStatement pStatement = connection.prepareStatement(QUERY_UPDATE_USER)) {
-            for (User user : users) {
-                if (user.getAccountStatus() == EntityStatus.UPDATED) {
-                    new DBUserMapper().mapFromObj(pStatement, user);
-                    pStatement.setLong(6, user.getId());
-                    pStatement.executeUpdate();
-                    user.setAccountStatus(EntityStatus.STABLE);
-                    logger.info("User updated in database. Email : [{}]; id : [{}]", user.getEmail(), user.getId());
-                }
-            }
+            new DBUserMapper().mapFromObj(pStatement, user);
+            pStatement.setLong(6, user.getId());
+            int result = pStatement.executeUpdate();
+            logger.info("User updated in database. Email : [{}]; id : [{}]", user.getEmail(), user.getId());
+            return result > 0;
         } catch (SQLException e) {
             handleSQLException(e);
         }
+        return false;
     }
 
     /**
-     * Update habits with status 'UPDATED' of a specified user.
+     * Update a habit with status 'UPDATED' of a specified user.
      */
-    public void updateHabits(long userID, List<Habit> habits) {
+    public boolean updateHabit(long userId, Habit habit) {
         String QUERY_UPDATE_HABIT = String.format(
-                "UPDATE %s.%s SET \"UserID\" = ?, \"Title\" = ?, \"Description\" = ?, \"Period\" = ?, \"StartDate\" = ?" +
-                " WHERE \"HabitID\" = ?;",
+                "UPDATE %s.%s SET \"user_id\" = ?, \"title\" = ?, \"description\" = ?, \"period\" = ?, \"startDate\" = ?" +
+                        " WHERE \"habit_id\" = ?;",
                 SCHEMA_NAME, TBL_HABITS_NAME
         );
         try (Connection connection = DriverManager.getConnection(DB_URL, DB_USER_NAME, DB_PASSWORD);
              PreparedStatement pStatement = connection.prepareStatement(QUERY_UPDATE_HABIT)) {
-            for (Habit habit : habits) {
-                if (habit.getStatus() == EntityStatus.UPDATED) {
-                    new DBHabitMapper().mapFromObj(pStatement, habit);
-                    pStatement.setInt(6, habit.getId());
-                    pStatement.executeUpdate();
-                    saveDates(connection, userID, habit);
-                    habit.setStatus(EntityStatus.STABLE);
-                }
-            }
+            new DBHabitMapper().mapFromObj(pStatement, habit);
+            pStatement.setInt(6, habit.getId());
+            int result = pStatement.executeUpdate();
+            saveDates(connection, userId, habit);
+            return result > 0;
         } catch (SQLException e) {
             handleSQLException(e);
         }
+        return false;
     }
 
     /**
-     * Remove users from database whose status field is 'DELETED'
+     * Remove a user from database whose status field is 'DELETED'
      */
-    public void removeUsers(List<User> users) {
+    public boolean removeUser(User user) {
         String QUERY_REMOVE_USER = String.format(
-                "DELETE FROM %s.%s WHERE \"UserID\" = ? AND \"Email\" = ?;",
+                "DELETE FROM %s.%s WHERE \"user_id\" = ? AND \"email\" = ?;",
                 SCHEMA_NAME, TBL_USERS_NAME
         );
         try(Connection connection = DriverManager.getConnection(DB_URL, DB_USER_NAME, DB_PASSWORD)) {
             try (PreparedStatement pStatement = connection.prepareStatement(QUERY_REMOVE_USER)) {
-                for (User user : users) {
-                    if (user.getAccountStatus() == EntityStatus.DELETED) {
-                        pStatement.setLong(1, user.getId());
-                        pStatement.setString(2, user.getEmail());
-                        pStatement.executeUpdate();
-                        logger.info("User deleted from database. Email : [{}]; id : [{}]", user.getEmail(), user.getId());
-                    }
+                pStatement.setLong(1, user.getId());
+                pStatement.setString(2, user.getEmail());
+                int result = pStatement.executeUpdate();
+                if (result > 0) {
+                    logger.info("User deleted from database. Email : [{}]; id : [{}]", user.getEmail(), user.getId());
+                    return true;
                 }
             } catch (SQLException e) {
                 handleSQLException(e);
@@ -265,50 +307,110 @@ public class DatabasePostgres implements Database {
         } catch (SQLException e) {
             handleSQLException(e);
         }
+        return false;
     }
 
     /**
-     * Remove habits from database with status field set to 'DELETED'
+     * Remove a user from database whose status field is 'DELETED'
      */
-    public void removeHabits(long userID, List<Habit> habits) {
+    public boolean removeUser(long id, String email) {
+        String QUERY_REMOVE_USER = String.format(
+                "DELETE FROM %s.%s WHERE \"user_id\" = ? AND \"email\" = ?;",
+                SCHEMA_NAME, TBL_USERS_NAME
+        );
+        try(Connection connection = DriverManager.getConnection(DB_URL, DB_USER_NAME, DB_PASSWORD)) {
+            try (PreparedStatement pStatement = connection.prepareStatement(QUERY_REMOVE_USER)) {
+                pStatement.setLong(1, id);
+                pStatement.setString(2, email.toLowerCase());
+                int result = pStatement.executeUpdate();
+                if (result > 0) {
+                    logger.info("User deleted from database. Email : [{}]; id : [{}]", email.toLowerCase(), id);
+                    return true;
+                }
+            } catch (SQLException e) {
+                handleSQLException(e);
+            }
+        } catch (SQLException e) {
+            handleSQLException(e);
+        }
+        return false;
+    }
+
+    /**
+     * Remove a habit by user id and habit id from database
+     */
+    public boolean removeHabit(long userId, int habitId) {
         String QUERY_REMOVE_HABIT = String.format(
-                "DELETE FROM %s.%s WHERE \"HabitID\" = ? AND \"UserEmail\" = ?;",
+                "DELETE FROM %s.%s WHERE \"habit_id\" = ? AND \"user_id\" = ?;",
                 SCHEMA_NAME, TBL_HABITS_NAME
         );
         try(Connection connection = DriverManager.getConnection(DB_URL, DB_USER_NAME, DB_PASSWORD)) {
             try (PreparedStatement pStatement = connection.prepareStatement(QUERY_REMOVE_HABIT)) {
-                for (Habit habit : habits) {
-                    if (habit.getStatus() == EntityStatus.DELETED) {
-                        removeDates(connection, userID, habit);
-                        pStatement.setInt(1, habit.getId());
-                        pStatement.setLong(2, userID);
-                        pStatement.executeUpdate();
-                    }
-                }
+                removeDates(connection, userId, habitId);
+                pStatement.setInt(1, habitId);
+                pStatement.setLong(2, userId);
+                return pStatement.executeUpdate() > 0;
             } catch (SQLException e) {
                 handleSQLException(e);
             }
         } catch (SQLException e) {
             handleSQLException(e);
         }
+        return false;
     }
 
     /**
-     * Remove completion dates from database for specified habit
+     * Remove a habit by user id and habit title from database
      */
-    private void removeDates(Connection connection, long userID, Habit habit) {
+    public boolean removeHabit(long userId, String title) {
+        String QUERY_REMOVE_HABIT = String.format(
+                "DELETE FROM %s.%s WHERE \"title\" = ? AND \"user_id\" = ?;",
+                SCHEMA_NAME, TBL_HABITS_NAME
+        );
+        try(Connection connection = DriverManager.getConnection(DB_URL, DB_USER_NAME, DB_PASSWORD)) {
+            try (PreparedStatement pStatement = connection.prepareStatement(QUERY_REMOVE_HABIT)) {
+                removeDates(connection, userId, title);
+                pStatement.setString(1, title);
+                pStatement.setLong(2, userId);
+                return pStatement.executeUpdate() > 0;
+            } catch (SQLException e) {
+                handleSQLException(e);
+            }
+        } catch (SQLException e) {
+            handleSQLException(e);
+        }
+        return false;
+    }
+
+    /**
+     * Remove completion dates from database for specified habit title
+     */
+    private void removeDates(Connection connection, long userId, String title) {
         String QUERY_REMOVE_DATE = String.format(
-                "DELETE FROM %s.%s WHERE \"UserID\" = ? AND \"Title\" = ? AND \"CompletionDate\" = ?;",
+                "DELETE FROM %s.%s WHERE \"user_id\" = ? AND \"title\" = ?;",
                 SCHEMA_NAME, TBL_DATES_NAME
         );
         try (PreparedStatement pStatement = connection.prepareStatement(QUERY_REMOVE_DATE)) {
-            Set<Instant> completionDates = habit.getCompletionDates();
-            for (Instant date : completionDates) {
-                pStatement.setLong(1, userID);
-                pStatement.setString(2, habit.getTitle());
-                pStatement.setTimestamp(3, Timestamp.from(date));
-                pStatement.executeUpdate();
-            }
+            pStatement.setLong(1, userId);
+            pStatement.setString(2, title);
+            pStatement.executeUpdate();
+        } catch (SQLException e) {
+            handleSQLException(e);
+        }
+    }
+
+    /**
+     * Remove completion dates from database for specified habit id
+     */
+    private void removeDates(Connection connection, long userId, int habitId) {
+        String QUERY_REMOVE_DATE = String.format(
+                "DELETE FROM %s.%s WHERE \"user_id\" = ? AND \"habit_id\" = ?;",
+                SCHEMA_NAME, TBL_DATES_NAME
+        );
+        try (PreparedStatement pStatement = connection.prepareStatement(QUERY_REMOVE_DATE)) {
+            pStatement.setLong(1, userId);
+            pStatement.setLong(2, habitId);
+            pStatement.executeUpdate();
         } catch (SQLException e) {
             handleSQLException(e);
         }

@@ -1,18 +1,24 @@
 package org.habitsapp.server.repository;
 
-import org.habitsapp.models.Habit;
-import org.habitsapp.models.User;
+import org.habitsapp.model.Habit;
+import org.habitsapp.model.User;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public interface Database {
-    List<User> loadUsers();
-    Map<Long,List<Habit>> loadHabits();
-    void saveUsers(List<User> users);
-    void saveHabits(long userID, List<Habit> habits);
-    void updateUsers(List<User> users);
-    void updateHabits(long userID, List<Habit> habits);
-    void removeUsers(List<User> users);
-    void removeHabits(long userID, List<Habit> habits);
+    //List<User> loadUsers();
+    //Map<Long,List<Habit>> loadHabits();
+    Optional<User> loadUser(long id);
+    Optional<User> loadUser(String email);
+    Map<String,Habit> loadHabits(long userId);
+    boolean saveUser(User user);
+    boolean saveHabit(long UserId, Habit habit);
+    boolean updateUser(User user);
+    boolean updateHabit(long userID, Habit habit);
+    boolean removeUser(User user);
+    boolean removeUser(long id, String email);
+    boolean removeHabit(long userID, String title);
+    boolean removeHabit(long userID, int habitId);
 }

@@ -38,3 +38,5 @@ bin/
 ### Mac OS ###
 .DS_Store
 /.idea/
+/src/main/java/org/habitsapp/client/
+/src/test/java/org/habitsapp/client/

@@ -1,0 +1,24 @@
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd"
+    logicalFilePath="db/changelog.xml">
+
+    <changeSet id="004" author="asvcx">
+
+        <createIndex indexName="idx_user_email" tableName="users">
+            <column name="email"/>
+        </createIndex>
+
+        <createIndex indexName="idx_habit_user_id" tableName="habits">
+            <column name="user_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_completion_date_user_id" tableName="completion_dates">
+            <column name="user_id"/>
+        </createIndex>
+
+    </changeSet>
+
+</databaseChangeLog>
