@@ -1,4 +1,4 @@
-package org.habitsapp.server.controller;
+package org.habitsapp.server.api;
 
 import lombok.RequiredArgsConstructor;
 import org.habitsapp.exchange.AdminActionDto;
@@ -17,7 +17,7 @@ import jakarta.servlet.http.HttpServletRequest;
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
-public class AdminController {
+public class Admin {
 
     private final UserService userService;
     private final AccountRepo repository;
@@ -25,14 +25,14 @@ public class AdminController {
     @GetMapping
     public ResponseEntity<List<String>> getUsersInfo(HttpServletRequest req) {
         String token = TokenReader.readToken(req, repository);
-        long id = (long) req.getAttribute("id");
+        long id = Long.parseLong((String)req.getAttribute("id"));
         Optional<User> admin = repository.getUserById(id);
 
         if (token == null || token.isEmpty() || admin.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        List<String> usersInfo = userService.getUsersInfo(admin.get().getEmail(), token);
+        List<String> usersInfo = userService.getUsersInfo(admin.get().getId(), token);
         if (admin.get().getAccessLevel() == AccessLevel.ADMIN) {
             return ResponseEntity.ok(usersInfo);
         } else {
@@ -49,12 +49,12 @@ public class AdminController {
             return ResponseEntity.badRequest().body(new MessageDto("Bad request"));
         }
 
-        long id = (long) req.getAttribute("id");
+        long id = Long.parseLong((String)req.getAttribute("id"));
         Optional<User> admin = repository.getUserById(id);
         Optional<User> user = repository.getUserByEmail(actionDto.getEmailToManage());
 
         boolean isManaged = admin.isPresent() && user.isPresent()
-                && userService.manageUserProfile(admin.get().getEmail(), token, actionDto.getEmailToManage(), actionDto.getProfileAction());
+                && userService.manageUserProfile(admin.get().getId(), token, actionDto.getEmailToManage(), actionDto.getProfileAction());
 
         if (isManaged) {
             return ResponseEntity.ok(new MessageDto("Action performed successfully"));

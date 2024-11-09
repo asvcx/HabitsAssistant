@@ -1,7 +1,6 @@
 package org.habitsapp.server;
 
 import org.habitsapp.model.AccessLevel;
-import org.habitsapp.model.EntityStatus;
 import org.habitsapp.model.User;
 import org.habitsapp.model.Habit;
 import org.habitsapp.server.migration.DatabaseConfig;
@@ -62,7 +61,6 @@ public class DatabaseTest {
         database = new DatabasePostgres(config);
     }
 
-    /*
     @Test
     @DisplayName("Should write users and read them back from the database")
     public void shouldWriteUsersAndReadBack() {
@@ -82,9 +80,8 @@ public class DatabaseTest {
     @DisplayName("Should write habits and read them back from the database")
     public void shouldWriteHabitsAndReadBack() {
         // Given
-        List<Habit> defaultHabits = database.loadHabits().values()
+        List<Habit> defaultHabits = database.loadHabits(1L).values()
                 .stream()
-                .flatMap(List::stream)
                 .toList();
         int habitCount = habits.size() + defaultHabits.size();
 
@@ -92,9 +89,8 @@ public class DatabaseTest {
         for (Habit habit : habits) {
             database.saveHabit(1L, habit);
         }
-        List<Habit> loadedHabits = database.loadHabits().values()
+        List<Habit> loadedHabits = database.loadHabits(1L).values()
                 .stream()
-                .flatMap(List::stream)
                 .toList();
         // Then
         assertThat(loadedHabits.size()).isEqualTo(habitCount);
@@ -106,7 +102,5 @@ public class DatabaseTest {
             postgresContainer.stop();
         }
     }
-
-     */
 
 }

@@ -1,4 +1,4 @@
-package org.habitsapp.server.controller;
+package org.habitsapp.server.api;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 @RestController
 @RequestMapping("/api/login")
 @RequiredArgsConstructor
-public class LoginController {
+public class Login {
     private final UserService userService;
 
     /**
@@ -32,7 +32,8 @@ public class LoginController {
         if (result.success()) {
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", "Bearer " + result.token());
-            SessionDto sessionDto = new SessionDto(userDto.getName(), userDto.getEmail(), userDto.getAccessLevel());
+            SessionDto sessionDto = new SessionDto(0L, userDto.getName(),
+                    userDto.getEmail(), result.userDto().getAccessLevel());
             return ResponseEntity.ok().headers(headers).body(sessionDto);
         } else {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();

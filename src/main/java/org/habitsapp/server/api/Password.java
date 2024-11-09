@@ -1,4 +1,4 @@
-package org.habitsapp.server.controller;
+package org.habitsapp.server.api;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("api/password")
 @RequiredArgsConstructor
-public class PasswordController {
+public class Password {
 
     private final UserService userService;
     private final AccountRepo repository;
@@ -30,10 +30,10 @@ public class PasswordController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         // Try to change user password
-        long id = (long) req.getAttribute("id");
+        long id = Long.parseLong((String)req.getAttribute("id"));
         Optional<User> user = repository.getUserById(id);
         boolean isChanged = user.isPresent() && userService.editUserPassword(
-                pswChange.getUserEmail(), token, pswChange.getOldPassword(), pswChange.getNewPassword()
+                id, token, pswChange.getOldPassword(), pswChange.getNewPassword()
         );
         if (isChanged) {
             return ResponseEntity.ok().body(new MessageDto("Password changed successfully"));

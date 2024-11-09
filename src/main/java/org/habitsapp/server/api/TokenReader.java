@@ -1,4 +1,4 @@
-package org.habitsapp.server.controller;
+package org.habitsapp.server.api;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.habitsapp.server.repository.AccountRepo;

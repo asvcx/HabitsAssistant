@@ -5,17 +5,17 @@
     https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd"
     logicalFilePath="db/changelog.xml">
 
-    <changeSet id="004" author="asvcx">
+    <changeSet id="004-create-index" author="asvcx">
 
-        <createIndex indexName="idx_user_email" tableName="users">
+        <createIndex indexName="idx_user_email" tableName="users" schemaName="habits_model_schema">
             <column name="email"/>
         </createIndex>
 
-        <createIndex indexName="idx_habit_user_id" tableName="habits">
+        <createIndex indexName="idx_habit_user_id" tableName="habits" schemaName="habits_model_schema">
             <column name="user_id"/>
         </createIndex>
 
-        <createIndex indexName="idx_completion_date_user_id" tableName="completion_dates">
+        <createIndex indexName="idx_completion_date_user_id" tableName="completion_dates" schemaName="habits_model_schema">
             <column name="user_id"/>
         </createIndex>
 

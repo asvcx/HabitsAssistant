@@ -23,59 +23,59 @@ public class HabitServiceImpl implements HabitService {
         this.jwt = jwt;
     }
 
-    public HabitCreationResult createHabit(String email, String token, HabitDto habitDto) {
+    public HabitCreationResult createHabit(Long userId, String token, HabitDto habitDto) {
         Claims claims = jwt.extractClaims(token);
         if (claims == null) {
             return new HabitCreationResult(false, "You are not logged in");
         }
-        Optional<Habit> habitOpt = repository.getHabitByTitle(email, habitDto.getTitle());
+        Optional<Habit> habitOpt = repository.getHabitByTitle(userId, habitDto.getTitle());
         if (habitOpt.isPresent()) {
             return new HabitCreationResult(false, "Habit with specified title already exists");
         }
         Habit habit = new Habit(habitDto.getTitle(), habitDto.getDescription(), habitDto.getPeriod());
-        if (repository.createHabit(email, habit)) {
+        if (repository.createHabit(userId, habit)) {
             return new HabitCreationResult(true, "Habit successfully created");
         } else {
             return new HabitCreationResult(false, "Failed to create a habit");
         }
     }
 
-    public boolean markHabitAsCompleted(String email, String token, String habitTitle) {
+    public boolean markHabitAsCompleted(Long userId, String token, String habitTitle) {
         Claims claims = jwt.extractClaims(token);
         if (claims == null) {
             return false;
         }
-        Optional<Map<String,Habit>> habits = repository.getHabitsOfUser(email);
+        Optional<Map<String,Habit>> habits = repository.getHabitsOfUser(userId);
         if (habits.isEmpty()) {
             return false;
         }
-        Optional<Habit> habit = repository.getHabitByTitle(email, habitTitle);
+        Optional<Habit> habit = repository.getHabitByTitle(userId, habitTitle);
         if (habit.isEmpty()) {
             return false;
         }
         habit.get().markAsCompleted();
-        repository.markHabit(email.toLowerCase(), habit.get());
+        repository.markHabit(userId, habit.get());
         return true;
     }
 
-    public boolean editHabit(String email, String token, Habit oldHabit, Habit newHabit) {
+    public boolean editHabit(Long userId, String token, Habit oldHabit, Habit newHabit) {
         Claims claims = jwt.extractClaims(token);
         if (claims == null) {
             return false;
         }
-        Optional<Map<String,Habit>> userHabits = repository.getHabitsOfUser(email);
+        Optional<Map<String,Habit>> userHabits = repository.getHabitsOfUser(userId);
         if (userHabits.isEmpty() || !userHabits.get().containsKey(oldHabit.getTitle())) {
             return false;
         }
-        return repository.updateHabit(email, oldHabit, newHabit);
+        return repository.updateHabit(userId, oldHabit, newHabit);
     }
 
-    public boolean deleteHabit(String email, String token, String title) {
+    public boolean deleteHabit(Long userId, String token, String title) {
         Claims claims = jwt.extractClaims(token);
         if (claims == null) {
             return false;
         }
-        return repository.deleteHabit(email, title);
+        return repository.deleteHabit(userId, title);
     }
 
 }

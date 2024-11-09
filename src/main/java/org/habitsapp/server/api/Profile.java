@@ -1,4 +1,4 @@
-package org.habitsapp.server.controller;
+package org.habitsapp.server.api;
 
 import lombok.RequiredArgsConstructor;
 import org.habitsapp.exchange.MessageDto;
@@ -18,7 +18,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/profile")
 @RequiredArgsConstructor
-public class ProfileController {
+public class Profile {
 
     private final UserService userService;
     private final AccountRepo repository;
@@ -26,7 +26,7 @@ public class ProfileController {
     /**
      *  Create user profile
      */
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<MessageDto> create(@RequestBody UserDto userDto, HttpServletRequest req) {
         // Check dto
         if (userDto == null || userDto.getEmail() == null
@@ -58,10 +58,10 @@ public class ProfileController {
         }
 
         // Try to change user profile
-        long id = (long) req.getAttribute("id");
+        long id = Long.parseLong((String)req.getAttribute("id"));
         Optional<User> user = repository.getUserById(id);
         boolean isChanged = user.isPresent() && userService.editUserData(
-                usrChange.getOldEmail(), token, usrChange.getNewEmail(), usrChange.getNewName()
+                id, token, usrChange.getNewEmail(), usrChange.getNewName()
         );
         if (isChanged) {
             return ResponseEntity.ok()
@@ -84,9 +84,9 @@ public class ProfileController {
                     .body(new MessageDto("You have not been authorized"));
         }
         // Try to delete user profile
-        long id = (long) req.getAttribute("id");
+        long id = Long.parseLong((String)req.getAttribute("id"));
         Optional<User> user = repository.getUserById(id);
-        boolean isDeleted = user.isPresent() && userService.deleteUser(user.get().getEmail(), token, user.get().getPassword());
+        boolean isDeleted = user.isPresent() && userService.deleteUser(id, token, user.get().getPassword());
         if (isDeleted) {
             return ResponseEntity.ok()
                     .body(new MessageDto("Profile deleted successfully"));

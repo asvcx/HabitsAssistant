@@ -7,7 +7,6 @@ import org.habitsapp.model.AccessLevel;
 import org.habitsapp.model.User;
 import org.habitsapp.model.dto.UserDto;
 import org.habitsapp.server.repository.AccountRepo;
-import org.habitsapp.model.EntityStatus;
 import org.habitsapp.server.repository.ProfileAction;
 import org.habitsapp.server.security.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,9 +49,8 @@ public class UserServiceImpl implements UserService {
             return new AuthorizationResult(false, "Specified password is wrong", null, null);
         }
         String token = createToken(user);
-        UserDto userDTO = new UserDto(user.getName(), user.getEmail(), user.getPassword(), user.getAccessLevel());
-        AuthorizationResult result = new AuthorizationResult(true, "Authentication successful", token, userDTO);
-        return result;
+        UserDto userDTO = new UserDto(0L, user.getName(), user.getEmail(), user.getPassword(), user.getAccessLevel());
+        return new AuthorizationResult(true, "Authentication successful", token, userDTO);
     }
 
     public RegistrationResult registerUser(UserDto userDTO) {
@@ -73,26 +71,26 @@ public class UserServiceImpl implements UserService {
         return new RegistrationResult(true, "User registered successfully");
     }
 
-    public boolean logoutUser(String token) {
+    public boolean logoutUser(Long id) {
         // return repository.removeToken(token);
         return true;
     }
 
-    public boolean deleteUser(String email, String token, String password) {
+    public boolean deleteUser(Long userId, String token, String password) {
         Claims claims = jwt.extractClaims(token);
-        if (claims == null || !repository.checkPassword(email, password)) {
+        if (claims == null || !repository.checkPassword(userId, password)) {
             return false;
         }
-        return repository.deleteUser(email, token);
+        return repository.deleteUser(userId);
     }
 
-    public List<String> getUsersInfo(String email, String token) {
+    public List<String> getUsersInfo(Long userId, String token) {
         Claims claims = jwt.extractClaims(token);
-        if (claims == null || email == null || token == null || !repository.isUserExists(email)) {
+        if (claims == null || userId == null || token == null || !repository.isUserExists(userId)) {
             return new LinkedList<>();
         }
-        Optional<User> user = repository.getUserByEmail(email);
-        if (user.isEmpty() || !email.equals(user.get().getEmail())
+        Optional<User> user = repository.getUserById(userId);
+        if (user.isEmpty() || !userId.equals(user.get().getId())
                 || user.get().getAccessLevel() != AccessLevel.ADMIN) {
             return new LinkedList<>();
         }
@@ -103,9 +101,9 @@ public class UserServiceImpl implements UserService {
                 .toList();
     }
 
-    public boolean manageUserProfile(String email, String token, String emailToManage, ProfileAction profileAction) {
+    public boolean manageUserProfile(Long adminId, String token, String emailToManage, ProfileAction profileAction) {
         Claims claims = jwt.extractClaims(token);
-        Optional<User> adminOpt = repository.getUserByEmail(email);
+        Optional<User> adminOpt = repository.getUserById(adminId);
         Optional<User> userOpt = repository.getUserByEmail(emailToManage);
         if (claims == null || adminOpt.isEmpty() || userOpt.isEmpty()
             || adminOpt.get().getAccessLevel() != AccessLevel.ADMIN) {
@@ -113,27 +111,27 @@ public class UserServiceImpl implements UserService {
         }
         User user = userOpt.get();
         User admin = adminOpt.get();
-        if (!email.equals(admin.getEmail())) {
+        if (!adminId.equals(admin.getId())) {
             return false;
         }
         return switch (profileAction) {
             case ProfileAction.BLOCK -> {
                 if (!user.isBlocked()) {
-                    yield repository.updateUser(emailToManage, User::block);
+                    yield repository.updateUser(user.getId(), User::block);
                 }
                 yield false;
             }
             case ProfileAction.UNBLOCK -> {
                 if (user.isBlocked()) {
-                    yield repository.updateUser(emailToManage, User::unblock);
+                    yield repository.updateUser(user.getId(), User::unblock);
                 }
                 yield false;
             }
-            case ProfileAction.DELETE -> repository.deleteUser(emailToManage, "");
+            case ProfileAction.DELETE -> repository.deleteUser(user.getId());
         };
     }
 
-    public boolean editUserData(String email, String token, String newEmail, String newName) {
+    public boolean editUserData(Long userId, String token, String newEmail, String newName) {
         Claims claims = jwt.extractClaims(token);
         if (claims == null || newEmail == null || newName == null) {
             return false;
@@ -141,27 +139,27 @@ public class UserServiceImpl implements UserService {
         if (!isEmailValid(newEmail) || !isNameValid(newName)) {
             return false;
         }
-        Optional<User> user = repository.getUserByEmail(email);
+        Optional<User> user = repository.getUserById(userId);
         if (user.isEmpty()) {
             return false;
         }
         user.get().setEmail(newEmail);
         user.get().setName(newName);
-        return repository.updateUser(email, token, user.get());
+        return repository.updateUser(userId, token, user.get());
     }
 
-    public boolean editUserPassword(String email, String token, String oldPassword, String newPassword) {
+    public boolean editUserPassword(Long userId, String token, String oldPassword, String newPassword) {
         Claims claims = jwt.extractClaims(token);
-        if (claims == null || !repository.checkPassword(email, oldPassword)) {
+        if (claims == null || !repository.checkPassword(userId, oldPassword)) {
             return false;
         }
-        Optional<User> user = repository.getUserByEmail(email.toLowerCase());
+        Optional<User> user = repository.getUserById(userId);
         if (user.isEmpty()) {
             return false;
         }
         if (user.get().comparePassword(oldPassword)) {
             user.get().setPassword(newPassword);
-            return repository.updateUser(email, token, user.get());
+            return repository.updateUser(userId, token, user.get());
         } else {
             return false;
         }

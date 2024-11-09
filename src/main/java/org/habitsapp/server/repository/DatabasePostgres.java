@@ -23,7 +23,7 @@ import java.util.*;
 @Component
 @DependsOn("migration")
 public class DatabasePostgres implements Database {
-    private static final Logger logger = LoggerFactory.getLogger(DatabasePostgres.class);
+    private final Logger logger = LoggerFactory.getLogger(DatabasePostgres.class);
 
     private final String DB_URL;
     private final String DB_USER_NAME;
@@ -73,18 +73,6 @@ public class DatabasePostgres implements Database {
         return executeQuery(QUERY_LOAD_USERS, new DBUserMapper());
     }
 
-    public Map<Long,List<Habit>> loadHabits() {
-        String QUERY_LOAD_HABITS = String.format("SELECT * FROM %s.%s;", SCHEMA_NAME, TBL_HABITS_NAME);
-        List<Habit> habits = executeQuery(QUERY_LOAD_HABITS, new DBHabitMapper());
-        Map<Long,List<Habit>> habitsByUserID = new HashMap<>();
-        for (Habit habit : habits) {
-            long userID = habit.getUserId();
-            loadDates(userID, habit);
-            habitsByUserID.computeIfAbsent(userID, _ -> new ArrayList<>()).add(habit);
-        }
-        return habitsByUserID;
-    }
-
     public Optional<User> loadUser(long id) {
         return loadUserByQuery("SELECT * FROM %s.%s WHERE \"user_id\" = ?;", id);
     }
@@ -110,7 +98,6 @@ public class DatabasePostgres implements Database {
             try (ResultSet resultSet = pStatement.executeQuery()) {
                 if (resultSet.next()) {
                     User user = new DBUserMapper().mapToObj(resultSet);
-                    logger.info("User loaded from database. Email : [{}]; id : [{}]", user.getEmail(), user.getId());
                     return Optional.of(user);
                 }
             } catch (SQLException e) {
@@ -187,7 +174,6 @@ public class DatabasePostgres implements Database {
             resultSet.next();
             long userId = resultSet.getLong("user_id");
             user.setId(userId);
-            logger.info("User saved to database. Email : [{}]; id : [{}]", user.getEmail(), user.getId());
         } catch (SQLException e) {
             handleSQLException(e);
         }
@@ -254,7 +240,6 @@ public class DatabasePostgres implements Database {
             new DBUserMapper().mapFromObj(pStatement, user);
             pStatement.setLong(6, user.getId());
             int result = pStatement.executeUpdate();
-            logger.info("User updated in database. Email : [{}]; id : [{}]", user.getEmail(), user.getId());
             return result > 0;
         } catch (SQLException e) {
             handleSQLException(e);
@@ -298,7 +283,6 @@ public class DatabasePostgres implements Database {
                 pStatement.setString(2, user.getEmail());
                 int result = pStatement.executeUpdate();
                 if (result > 0) {
-                    logger.info("User deleted from database. Email : [{}]; id : [{}]", user.getEmail(), user.getId());
                     return true;
                 }
             } catch (SQLException e) {
@@ -324,7 +308,6 @@ public class DatabasePostgres implements Database {
                 pStatement.setString(2, email.toLowerCase());
                 int result = pStatement.executeUpdate();
                 if (result > 0) {
-                    logger.info("User deleted from database. Email : [{}]; id : [{}]", email.toLowerCase(), id);
                     return true;
                 }
             } catch (SQLException e) {

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.5.xsd"
+        logicalFilePath="db/changelog.xml">
+
+        <changeSet id="005-create-logging-table" author="asvcx">
+
+            <createSequence sequenceName="event_id_seq" schemaName="habits_service_schema" incrementBy="1" startValue="1"/>
+
+            <createTable tableName="audit_log" schemaName="habits_service_schema" remarks="Table for audit user events">
+
+                <column name="event_id" type="BIGINT" defaultValueComputed="nextval('habits_service_schema.event_id_seq')" remarks="Identifier of event">
+                    <constraints primaryKey="true" nullable="false"/>
+                </column>
+                <column name="user_id" type="BIGINT" remarks="The identifier of user">
+                    <constraints nullable="true"/>
+                </column>
+                <column name="message" type="VARCHAR(255)" remarks="Event message">
+                    <constraints nullable="false"/>
+                </column>
+                <column name="timestamp" type="TIMESTAMP" remarks="The time when event happened">
+                    <constraints nullable="false"/>
+                </column>
+            </createTable>
+
+            <addForeignKeyConstraint
+                    constraintName="fk_user_id"
+                    baseTableSchemaName="habits_service_schema"
+                    referencedTableSchemaName="habits_model_schema"
+                    baseTableName="audit_log"
+                    baseColumnNames="user_id"
+                    referencedTableName="users"
+                    referencedColumnNames="user_id"
+                    onUpdate="CASCADE"
+                    onDelete="CASCADE"
+            />
+
+        </changeSet>
+
+</databaseChangeLog>

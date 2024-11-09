@@ -7,14 +7,13 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.habitsapp.model.Habit;
 import org.habitsapp.model.result.HabitCreationResult;
 import org.habitsapp.model.dto.HabitDto;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
+import org.habitsapp.server.repository.AuditRepo;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Aspect
-@Component
 public class AuditHabit {
-    private static final Logger logger = LoggerFactory.getLogger(AuditHabit.class);
+    @Autowired
+    private AuditRepo auditRepo;
 
     @Pointcut("execution(* org.habitsapp.server.service.HabitService.createHabit(..))")
     public void createHabit() {}
@@ -22,17 +21,19 @@ public class AuditHabit {
     public Object auditCreateHabit(ProceedingJoinPoint joinPoint) throws Throwable {
         String methodName = joinPoint.getSignature().getName();
         Object[] args = joinPoint.getArgs();
-        String email = (String) args[0];
+        Long userId = (Long) args[0];
         String habitTitle = ((HabitDto) args[2]).getTitle();
         Object methodResult = joinPoint.proceed();
         if (methodResult instanceof HabitCreationResult result) {
             if (result.success()) {
-                logger.info("User [{}] has created a new habit [{}]", email, habitTitle);
+                auditRepo.saveToLog(userId, String.format("Habit [%s] has been created", habitTitle));
             } else {
-                logger.info("User [{}] failed to create a new habit [{}]", email, habitTitle);
+                auditRepo.saveToLog(userId, String.format("Failed to create the habit [%s]", habitTitle));
             }
         } else {
-            logger.info("Method {} returned an object of type: {}", methodName, methodResult.getClass().getSimpleName());
+            String msg = String.format("Method [%s] returned an object of type: [%s]",
+                    methodName, methodResult.getClass().getSimpleName());
+            auditRepo.saveToLog(userId, msg);
         }
         return methodResult;
     }
@@ -43,17 +44,19 @@ public class AuditHabit {
     public Object auditEditHabit(ProceedingJoinPoint joinPoint) throws Throwable {
         String methodName = joinPoint.getSignature().getName();
         Object[] args = joinPoint.getArgs();
-        String email = (String) args[0];
+        Long userId = (Long) args[0];
         String habitTitle = ((Habit) args[3]).getTitle();
         Object methodResult = joinPoint.proceed();
         if (methodResult instanceof Boolean result) {
             if (result) {
-                logger.info("User [{}] has edited a habit [{}]", email, habitTitle);
+                auditRepo.saveToLog(userId, String.format("Habit [%s] has been changed", habitTitle));
             } else {
-                logger.info("User [{}] failed to edit a habit [{}]", email, habitTitle);
+                auditRepo.saveToLog(userId, String.format("Failed to change the habit [%s]", habitTitle));
             }
         } else {
-            logger.info("Method {} returned an object of type: {}", methodName, methodResult.getClass().getSimpleName());
+            String msg = String.format("Method [%s] returned an object of type: [%s]",
+                    methodName, methodResult.getClass().getSimpleName());
+            auditRepo.saveToLog(userId, msg);
         }
         return methodResult;
     }
@@ -64,17 +67,19 @@ public class AuditHabit {
     public Object auditDeleteHabit(ProceedingJoinPoint joinPoint) throws Throwable {
         String methodName = joinPoint.getSignature().getName();
         Object[] args = joinPoint.getArgs();
-        String email = (String) args[0];
+        Long userId = (Long) args[0];
         String habitTitle = (String) args[2];
         Object methodResult = joinPoint.proceed();
         if (methodResult instanceof Boolean result) {
             if (result) {
-                logger.info("User [{}] has deleted a habit [{}]", email, habitTitle);
+                auditRepo.saveToLog(userId, String.format("Habit [%s] has been deleted", habitTitle));
             } else {
-                logger.info("User [{}] failed to delete a habit [{}]", email, habitTitle);
+                auditRepo.saveToLog(userId, String.format("Failed to delete the habit [%s]", habitTitle));
             }
         } else {
-            logger.info("Method {} returned an object of type: {}", methodName, methodResult.getClass().getSimpleName());
+            String msg = String.format("Method [%s] returned an object of type: [%s]",
+                    methodName, methodResult.getClass().getSimpleName());
+            auditRepo.saveToLog(userId, msg);
         }
         return methodResult;
     }

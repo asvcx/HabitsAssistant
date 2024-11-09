@@ -20,6 +20,8 @@ public class DatabaseConfig {
     private String tblUsersName;
     private String tblHabitsName;
     private String tblDatesName;
+    private String logSchemaName;
+    private String tblLogName;
 
     static {
         try {
@@ -35,13 +37,18 @@ public class DatabaseConfig {
             Map<String, Object> data = yaml.load(in);
             Map<String, Object> dbInfo = (Map<String, Object>) data.get("db");
             Map<String, Object> dbTable = (Map<String, Object>) data.get("table");
+
             this.url = ((String) dbInfo.get("url"));
             this.username = (String) dbInfo.get("username");
             this.password = (String) dbInfo.get("password");
+
             this.schemaName = (String) dbInfo.get("schema_name");
             this.tblUsersName = (String) dbTable.get("users_name");
             this.tblHabitsName = (String) dbTable.get("habits_name");
             this.tblDatesName = (String) dbTable.get("dates_name");
+
+            this.logSchemaName = (String) dbInfo.get("log_schema_name");
+            this.tblLogName = (String) dbTable.get("log_name");
         } catch (Exception e) {
             throw new RuntimeException("Failed to load database configuration", e);
         }
