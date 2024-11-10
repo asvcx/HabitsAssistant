@@ -4,7 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.habitsapp.exchange.MessageDto;
 import org.habitsapp.server.repository.AccountRepo;
-import org.habitsapp.server.service.UserService;
+import org.example.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;

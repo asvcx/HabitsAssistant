@@ -16,7 +16,7 @@ import java.security.NoSuchAlgorithmException;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class AccountRepositoryTest {
+public class AccountRepositoryTest2 {
 
     @Autowired
     private AccountRepoImpl repository;

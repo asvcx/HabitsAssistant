@@ -1,6 +1,5 @@
 package org.habitsapp.server.repository;
 
-import org.habitsapp.exchange.AuditEventDto;
 import org.habitsapp.server.migration.DatabaseConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +11,9 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.LinkedList;
+
+import org.example.AuditRepo;
+import org.example.AuditEvent;
 
 @Component
 @DependsOn("migration")
@@ -57,7 +59,7 @@ public class AuditRepoImpl implements AuditRepo {
         }
     }
 
-    public List<AuditEventDto> getFromLog(Long userId, int limit, int offset) {
+    public List<AuditEvent> getFromLog(Long userId, int limit, int offset) {
         String QUERY_SAVE_MSG = String.format(
                 "SELECT (\"user_id\", \"message\", \"timestamp\") FROM %s.%s" +
                 " WHERE (user_id = ? OR ? = -1)" +
@@ -73,9 +75,9 @@ public class AuditRepoImpl implements AuditRepo {
             pStatement.setInt(4, offset);
             ResultSet resultSet = pStatement.executeQuery();
 
-            List<AuditEventDto> logs = new LinkedList<>();
+            List<AuditEvent> logs = new LinkedList<>();
             while (resultSet.next()) {
-                logs.add(new AuditEventDto(resultSet.getLong("user_id"),
+                logs.add(new AuditEvent(resultSet.getLong("user_id"),
                         resultSet.getString("message"),
                         resultSet.getTimestamp("timestamp").toInstant()));
             }

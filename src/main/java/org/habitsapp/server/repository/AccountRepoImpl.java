@@ -59,16 +59,6 @@ public class AccountRepoImpl implements AccountRepo {
         return false;
     }
 
-    public boolean updateUser(Long id, String token, User changedUser) {
-        Optional<User> userOpt = database.loadUser(id);
-        if (userOpt.isEmpty()) {
-            return false;
-        }
-        User user = userOpt.get();
-        database.updateUser(user);
-        return true;
-    }
-
     public boolean deleteUser(Long id) {
         Optional<User> userOpt = database.loadUser(id);
         if (userOpt.isEmpty()) {
@@ -83,6 +73,16 @@ public class AccountRepoImpl implements AccountRepo {
         return true;
     }
 
+    public boolean updateUser(Long id, String token, User changedUser) {
+        Optional<User> userOpt = database.loadUser(id);
+        if (userOpt.isEmpty()) {
+            return false;
+        }
+        User user = userOpt.get();
+        database.updateUser(user);
+        return true;
+    }
+
     public boolean updateUser(Long id, Consumer<User> userAction) {
         Optional<User> user = database.loadUser(id);
         if (user.isPresent() && userAction != null) {
@@ -93,18 +93,19 @@ public class AccountRepoImpl implements AccountRepo {
         return false;
     }
 
-    public boolean updateHabit(Long userId, Habit oldHabit, Habit newHabit) {
+    public boolean updateHabit(Long userId, String oldTitle, String title, String description, int period) {
         Map<String,Habit> userHabits = getHabitsOfUser(userId).orElseGet(LinkedHashMap::new);
         Optional<User> user = database.loadUser(userId);
-        if (!userHabits.containsKey(oldHabit.getTitle()) || user.isEmpty()) {
+        if (!userHabits.containsKey(oldTitle) || user.isEmpty()) {
             return false;
         }
-        userHabits.remove(oldHabit.getTitle());
-        oldHabit.setTitle(newHabit.getTitle());
-        oldHabit.setDescription(newHabit.getDescription());
-        oldHabit.setPeriod(newHabit.getPeriod());
-        userHabits.put(oldHabit.getTitle(), oldHabit);
-        database.updateHabit(user.get().getId(), oldHabit);
+        Habit habit = new Habit();
+        userHabits.remove(oldTitle);
+        habit.setTitle(title);
+        habit.setDescription(description);
+        habit.setPeriod(period);
+        userHabits.put(habit.getTitle(), habit);
+        database.updateHabit(user.get().getId(), habit);
         return true;
     }
 

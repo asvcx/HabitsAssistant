@@ -6,7 +6,7 @@ import org.habitsapp.exchange.MessageDto;
 import org.habitsapp.model.AccessLevel;
 import org.habitsapp.model.User;
 import org.habitsapp.server.repository.AccountRepo;
-import org.habitsapp.server.service.UserService;
+import org.example.UserService;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.http.HttpStatus;
@@ -45,7 +45,8 @@ public class Admin {
     public ResponseEntity<MessageDto> manageUserProfile(@RequestBody AdminActionDto actionDto, HttpServletRequest req) {
         String token = TokenReader.readToken(req, repository);
 
-        if (token == null || token.isEmpty() || actionDto == null || actionDto.getProfileAction() == null || actionDto.getEmailToManage() == null) {
+        if (token == null || token.isEmpty() || actionDto == null || actionDto.getProfileAction() == null
+                || actionDto.getEmailToManage() == null) {
             return ResponseEntity.badRequest().body(new MessageDto("Bad request"));
         }
 
@@ -54,7 +55,8 @@ public class Admin {
         Optional<User> user = repository.getUserByEmail(actionDto.getEmailToManage());
 
         boolean isManaged = admin.isPresent() && user.isPresent()
-                && userService.manageUserProfile(admin.get().getId(), token, actionDto.getEmailToManage(), actionDto.getProfileAction());
+                && userService.manageUserProfile(admin.get().getId(), token, actionDto.getEmailToManage(),
+                actionDto.getProfileAction().getDeclaringClass().getName());
 
         if (isManaged) {
             return ResponseEntity.ok(new MessageDto("Action performed successfully"));

@@ -17,7 +17,5 @@ public interface Database {
     boolean updateUser(User user);
     boolean updateHabit(long userID, Habit habit);
     boolean removeUser(User user);
-    boolean removeUser(long id, String email);
     boolean removeHabit(long userID, String title);
-    boolean removeHabit(long userID, int habitId);
 }

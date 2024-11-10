@@ -2,10 +2,9 @@ package org.habitsapp.server.api;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.habitsapp.exchange.SessionDto;
+import org.habitsapp.exchange.MessageDto;
 import org.habitsapp.model.dto.UserDto;
-import org.habitsapp.model.result.AuthorizationResult;
-import org.habitsapp.server.service.UserService;
+import org.example.UserService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,17 +23,15 @@ public class Login {
      * Login to profile
      */
     @PostMapping
-    protected ResponseEntity<SessionDto> login(@RequestBody UserDto userDto, HttpServletRequest req) {
+    protected ResponseEntity<MessageDto> login(@RequestBody UserDto userDto, HttpServletRequest req) {
         if (userDto == null || userDto.getEmail() == null || userDto.getPassword() == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
-        AuthorizationResult result = userService.authorizeUser(userDto.getEmail(), userDto.getPassword());
-        if (result.success()) {
+        String token = userService.authorizeUser(userDto.getEmail(), userDto.getPassword());
+        if (!token.isEmpty()) {
             HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "Bearer " + result.token());
-            SessionDto sessionDto = new SessionDto(0L, userDto.getName(),
-                    userDto.getEmail(), result.userDto().getAccessLevel());
-            return ResponseEntity.ok().headers(headers).body(sessionDto);
+            headers.set("Authorization", "Bearer " + token);
+            return ResponseEntity.ok().headers(headers).body(new MessageDto("You have successfully logged in"));
         } else {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }

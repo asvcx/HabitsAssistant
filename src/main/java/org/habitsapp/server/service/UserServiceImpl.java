@@ -1,11 +1,9 @@
 package org.habitsapp.server.service;
 
 import io.jsonwebtoken.Claims;
-import org.habitsapp.model.result.AuthorizationResult;
-import org.habitsapp.model.result.RegistrationResult;
+import org.example.UserService;
 import org.habitsapp.model.AccessLevel;
 import org.habitsapp.model.User;
-import org.habitsapp.model.dto.UserDto;
 import org.habitsapp.server.repository.AccountRepo;
 import org.habitsapp.server.repository.ProfileAction;
 import org.habitsapp.server.security.JwtService;
@@ -35,40 +33,37 @@ public class UserServiceImpl implements UserService {
         return jwt.generateJwt(payload, user.getName(), String.valueOf(user.getId()));
     }
 
-    public AuthorizationResult authorizeUser(String email, String password) {
+    public String authorizeUser(String email, String password) {
         Optional<User> userOpt = repository.getUserByEmail(email);
         if (userOpt.isEmpty()) {
-            String wrongEmailMsg = String.format("User with email (%s) not found", email);
-            return new AuthorizationResult(false, wrongEmailMsg, null, null);
+            return "";
         }
         User user = userOpt.get();
         if (user.isBlocked()) {
-            return new AuthorizationResult(false, "User with specified email is blocked", null, null);
+            return "";
         }
         if (!user.comparePassword(password)) {
-            return new AuthorizationResult(false, "Specified password is wrong", null, null);
+            return "";
         }
-        String token = createToken(user);
-        UserDto userDTO = new UserDto(0L, user.getName(), user.getEmail(), user.getPassword(), user.getAccessLevel());
-        return new AuthorizationResult(true, "Authentication successful", token, userDTO);
+        return createToken(user);
     }
 
-    public RegistrationResult registerUser(UserDto userDTO) {
-        Optional<User> userOpt = repository.getUserByEmail(userDTO.getEmail());
+    public boolean registerUser(String name, String email, String password) {
+        Optional<User> userOpt = repository.getUserByEmail(email);
         if (userOpt.isPresent()) {
-            return new RegistrationResult(false, "User with specified email already exists");
+            return false;
         }
-        if (userDTO.getPassword().length() < 6) {
-            return new RegistrationResult(false, "Password must contain at least 6 characters");
+        if (password.length() < 6) {
+            return false;
         }
-        if (!isEmailValid(userDTO.getEmail())) {
-            return new RegistrationResult(false, "Specified email is not valid");
+        if (!isEmailValid(email)) {
+            return false;
         }
-        User user = new User(userDTO.getName(), userDTO.getEmail(), userDTO.getPassword());
+        User user = new User(name, email, password);
         if (!repository.createUser(user)) {
-            return new RegistrationResult(false, "Error occurred during registration");
+            return false;
         };
-        return new RegistrationResult(true, "User registered successfully");
+        return true;
     }
 
     public boolean logoutUser(Long id) {
@@ -101,7 +96,7 @@ public class UserServiceImpl implements UserService {
                 .toList();
     }
 
-    public boolean manageUserProfile(Long adminId, String token, String emailToManage, ProfileAction profileAction) {
+    public boolean manageUserProfile(Long adminId, String token, String emailToManage, String action) {
         Claims claims = jwt.extractClaims(token);
         Optional<User> adminOpt = repository.getUserById(adminId);
         Optional<User> userOpt = repository.getUserByEmail(emailToManage);
@@ -113,6 +108,24 @@ public class UserServiceImpl implements UserService {
         User admin = adminOpt.get();
         if (!adminId.equals(admin.getId())) {
             return false;
+        }
+        ProfileAction profileAction;
+        switch (action.toLowerCase()) {
+            case "unblock" : {
+                profileAction = ProfileAction.UNBLOCK;
+                break;
+            }
+            case "block" : {
+                profileAction = ProfileAction.BLOCK;
+                break;
+            }
+            case "delete" : {
+                profileAction = ProfileAction.DELETE;
+                break;
+            }
+            default: {
+                return  false;
+            }
         }
         return switch (profileAction) {
             case ProfileAction.BLOCK -> {

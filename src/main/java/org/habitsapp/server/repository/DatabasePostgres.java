@@ -227,7 +227,7 @@ public class DatabasePostgres implements Database {
     }
 
     /**
-     * Update a user with status 'UPDATED'.
+     * Update a user
      */
     public boolean updateUser(User user) {
         String QUERY_UPDATE_USER = String.format(
@@ -248,7 +248,7 @@ public class DatabasePostgres implements Database {
     }
 
     /**
-     * Update a habit with status 'UPDATED' of a specified user.
+     * Update a habit of a specified user.
      */
     public boolean updateHabit(long userId, Habit habit) {
         String QUERY_UPDATE_HABIT = String.format(
@@ -270,7 +270,7 @@ public class DatabasePostgres implements Database {
     }
 
     /**
-     * Remove a user from database whose status field is 'DELETED'
+     * Remove a user from database
      */
     public boolean removeUser(User user) {
         String QUERY_REMOVE_USER = String.format(
@@ -285,54 +285,6 @@ public class DatabasePostgres implements Database {
                 if (result > 0) {
                     return true;
                 }
-            } catch (SQLException e) {
-                handleSQLException(e);
-            }
-        } catch (SQLException e) {
-            handleSQLException(e);
-        }
-        return false;
-    }
-
-    /**
-     * Remove a user from database whose status field is 'DELETED'
-     */
-    public boolean removeUser(long id, String email) {
-        String QUERY_REMOVE_USER = String.format(
-                "DELETE FROM %s.%s WHERE \"user_id\" = ? AND \"email\" = ?;",
-                SCHEMA_NAME, TBL_USERS_NAME
-        );
-        try(Connection connection = DriverManager.getConnection(DB_URL, DB_USER_NAME, DB_PASSWORD)) {
-            try (PreparedStatement pStatement = connection.prepareStatement(QUERY_REMOVE_USER)) {
-                pStatement.setLong(1, id);
-                pStatement.setString(2, email.toLowerCase());
-                int result = pStatement.executeUpdate();
-                if (result > 0) {
-                    return true;
-                }
-            } catch (SQLException e) {
-                handleSQLException(e);
-            }
-        } catch (SQLException e) {
-            handleSQLException(e);
-        }
-        return false;
-    }
-
-    /**
-     * Remove a habit by user id and habit id from database
-     */
-    public boolean removeHabit(long userId, int habitId) {
-        String QUERY_REMOVE_HABIT = String.format(
-                "DELETE FROM %s.%s WHERE \"habit_id\" = ? AND \"user_id\" = ?;",
-                SCHEMA_NAME, TBL_HABITS_NAME
-        );
-        try(Connection connection = DriverManager.getConnection(DB_URL, DB_USER_NAME, DB_PASSWORD)) {
-            try (PreparedStatement pStatement = connection.prepareStatement(QUERY_REMOVE_HABIT)) {
-                removeDates(connection, userId, habitId);
-                pStatement.setInt(1, habitId);
-                pStatement.setLong(2, userId);
-                return pStatement.executeUpdate() > 0;
             } catch (SQLException e) {
                 handleSQLException(e);
             }
@@ -376,23 +328,6 @@ public class DatabasePostgres implements Database {
         try (PreparedStatement pStatement = connection.prepareStatement(QUERY_REMOVE_DATE)) {
             pStatement.setLong(1, userId);
             pStatement.setString(2, title);
-            pStatement.executeUpdate();
-        } catch (SQLException e) {
-            handleSQLException(e);
-        }
-    }
-
-    /**
-     * Remove completion dates from database for specified habit id
-     */
-    private void removeDates(Connection connection, long userId, int habitId) {
-        String QUERY_REMOVE_DATE = String.format(
-                "DELETE FROM %s.%s WHERE \"user_id\" = ? AND \"habit_id\" = ?;",
-                SCHEMA_NAME, TBL_DATES_NAME
-        );
-        try (PreparedStatement pStatement = connection.prepareStatement(QUERY_REMOVE_DATE)) {
-            pStatement.setLong(1, userId);
-            pStatement.setLong(2, habitId);
             pStatement.executeUpdate();
         } catch (SQLException e) {
             handleSQLException(e);

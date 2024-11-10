@@ -7,9 +7,8 @@ import org.habitsapp.exchange.MessageDto;
 import org.habitsapp.model.User;
 import org.habitsapp.model.dto.HabitDto;
 import org.habitsapp.model.dto.HabitMapper;
-import org.habitsapp.model.result.HabitCreationResult;
 import org.habitsapp.server.repository.AccountRepo;
-import org.habitsapp.server.service.HabitService;
+import org.example.HabitService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -59,8 +58,9 @@ public class Habit {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         // Try to create habit
-        HabitCreationResult result = habitService.createHabit(id, token, habitDto);
-        if (result.success()) {
+        boolean result = habitService.createHabit(id,
+                habitDto.getTitle(), habitDto.getDescription(), habitDto.getPeriod());
+        if (result) {
             return ResponseEntity.ok().body(new MessageDto("Habit has been created"));
         } else {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(new MessageDto("Failed to create a habit"));
@@ -81,8 +81,8 @@ public class Habit {
         Optional<User> user = repository.getUserById(id);
         org.habitsapp.model.Habit oldHabit = HabitMapper.INSTANCE.habitDtoToHabit(hbtChange.getOldHabit());
         org.habitsapp.model.Habit newHabit = HabitMapper.INSTANCE.habitDtoToHabit(hbtChange.getNewHabit());
-        boolean isChanged = user.isPresent() &&
-                habitService.editHabit(id, token, oldHabit, newHabit);
+        boolean isChanged = user.isPresent() && habitService.editHabit(
+                id, oldHabit.getTitle(), newHabit.getTitle(), newHabit.getDescription(), newHabit.getPeriod());
         if (isChanged) {
             return ResponseEntity.ok().body(new MessageDto("Habit changed successfully"));
         } else {
@@ -109,7 +109,7 @@ public class Habit {
         long id = Long.parseLong((String)req.getAttribute("id"));
         Optional<User> user = repository.getUserById(id);
         boolean isMarked = user.isPresent()
-                && habitService.markHabitAsCompleted(id, token, habitTitle);
+                && habitService.markHabitAsCompleted(id, habitTitle);
         if(isMarked) {
             return ResponseEntity.ok()
                     .body(new MessageDto("Habit marked successfully"));
@@ -137,7 +137,7 @@ public class Habit {
                     .body(new MessageDto("Habit title has not been provided"));
         }
         // Try to delete the habit
-        boolean isDeleted = habitService.deleteHabit(id, token, habitTitle);
+        boolean isDeleted = habitService.deleteHabit(id, habitTitle);
         if(isDeleted) {
             return ResponseEntity.ok()
                     .body(new MessageDto("Habit deleted successfully"));

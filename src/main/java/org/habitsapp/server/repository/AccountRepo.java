@@ -24,7 +24,7 @@ public interface AccountRepo {
     boolean deleteUser(Long id);
 
     boolean createHabit(Long id, Habit habit);
-    boolean updateHabit(Long id, Habit oldHabit, Habit newHabit);
+    boolean updateHabit(Long id, String oldTitle, String title, String description, int period);
     boolean markHabit(Long id, Habit habit);
     boolean deleteHabit(Long id, String title);
     boolean checkPassword(Long id, String password);

@@ -1,7 +1,7 @@
 plugins {
     id("java")
+    application
     war
-    id("io.freefair.aspectj.post-compile-weaving") version "8.10.2"
     id("org.springframework.boot") version "3.2.0"
     id("io.spring.dependency-management") version "1.1.4"
 }
@@ -11,6 +11,7 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
+    mavenLocal()
 }
 
 dependencies {
@@ -29,9 +30,6 @@ dependencies {
     implementation("io.jsonwebtoken:jjwt-api:0.12.6")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
     runtimeOnly("io.jsonwebtoken:jjwt-orgjson:0.12.6")
-
-    implementation("org.aspectj:aspectjrt:1.9.22")
-    implementation("org.aspectj:aspectjweaver:1.9.22")
 
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-rest")
@@ -53,6 +51,12 @@ dependencies {
     testImplementation("org.testcontainers:junit-jupiter:1.20.1")
     testImplementation("org.testcontainers:postgresql:1.20.1")
     testImplementation("org.skyscreamer:jsonassert:1.5.3")
+
+    implementation("org.example:audit-starter:1.0.3")
+}
+
+application {
+    mainClass.set("org.habitsapp.Application")
 }
 
 tasks.war {

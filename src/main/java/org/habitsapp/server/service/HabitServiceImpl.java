@@ -1,11 +1,8 @@
 package org.habitsapp.server.service;
 
-import io.jsonwebtoken.Claims;
-import org.habitsapp.model.result.HabitCreationResult;
+import org.example.HabitService;
 import org.habitsapp.model.Habit;
-import org.habitsapp.model.dto.HabitDto;
 import org.habitsapp.server.repository.AccountRepo;
-import org.habitsapp.server.security.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,41 +12,31 @@ import java.util.Optional;
 @Service
 public class HabitServiceImpl implements HabitService {
     private final AccountRepo repository;
-    private final JwtService jwt;
 
     @Autowired
-    public HabitServiceImpl(AccountRepo repository, JwtService jwt) {
+    public HabitServiceImpl(AccountRepo repository) {
         this.repository = repository;
-        this.jwt = jwt;
     }
 
-    public HabitCreationResult createHabit(Long userId, String token, HabitDto habitDto) {
-        Claims claims = jwt.extractClaims(token);
-        if (claims == null) {
-            return new HabitCreationResult(false, "You are not logged in");
-        }
-        Optional<Habit> habitOpt = repository.getHabitByTitle(userId, habitDto.getTitle());
+    public boolean createHabit(Long userId, String title, String description, int period) {
+        Optional<Habit> habitOpt = repository.getHabitByTitle(userId, title);
         if (habitOpt.isPresent()) {
-            return new HabitCreationResult(false, "Habit with specified title already exists");
-        }
-        Habit habit = new Habit(habitDto.getTitle(), habitDto.getDescription(), habitDto.getPeriod());
-        if (repository.createHabit(userId, habit)) {
-            return new HabitCreationResult(true, "Habit successfully created");
-        } else {
-            return new HabitCreationResult(false, "Failed to create a habit");
-        }
-    }
-
-    public boolean markHabitAsCompleted(Long userId, String token, String habitTitle) {
-        Claims claims = jwt.extractClaims(token);
-        if (claims == null) {
             return false;
         }
+        Habit habit = new Habit(title, description, period);
+        if (repository.createHabit(userId, habit)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean markHabitAsCompleted(Long userId, String title) {
         Optional<Map<String,Habit>> habits = repository.getHabitsOfUser(userId);
         if (habits.isEmpty()) {
             return false;
         }
-        Optional<Habit> habit = repository.getHabitByTitle(userId, habitTitle);
+        Optional<Habit> habit = repository.getHabitByTitle(userId, title);
         if (habit.isEmpty()) {
             return false;
         }
@@ -58,23 +45,15 @@ public class HabitServiceImpl implements HabitService {
         return true;
     }
 
-    public boolean editHabit(Long userId, String token, Habit oldHabit, Habit newHabit) {
-        Claims claims = jwt.extractClaims(token);
-        if (claims == null) {
-            return false;
-        }
+    public boolean editHabit(Long userId, String oldTitle, String title, String description, int period) {
         Optional<Map<String,Habit>> userHabits = repository.getHabitsOfUser(userId);
-        if (userHabits.isEmpty() || !userHabits.get().containsKey(oldHabit.getTitle())) {
+        if (userHabits.isEmpty() || !userHabits.get().containsKey(oldTitle)) {
             return false;
         }
-        return repository.updateHabit(userId, oldHabit, newHabit);
+        return repository.updateHabit(userId, oldTitle, title, description, period);
     }
 
-    public boolean deleteHabit(Long userId, String token, String title) {
-        Claims claims = jwt.extractClaims(token);
-        if (claims == null) {
-            return false;
-        }
+    public boolean deleteHabit(Long userId, String title) {
         return repository.deleteHabit(userId, title);
     }
 

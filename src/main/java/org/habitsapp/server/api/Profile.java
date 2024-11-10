@@ -6,9 +6,8 @@ import org.habitsapp.exchange.PasswordConfirmDto;
 import org.habitsapp.exchange.ProfileChangeDto;
 import org.habitsapp.model.User;
 import org.habitsapp.model.dto.UserDto;
-import org.habitsapp.model.result.RegistrationResult;
 import org.habitsapp.server.repository.AccountRepo;
-import org.habitsapp.server.service.UserService;
+import org.example.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,11 +33,11 @@ public class Profile {
             return ResponseEntity.badRequest().body(new MessageDto("User data have not been provided"));
         }
         // Try to create user profile
-        RegistrationResult result = userService.registerUser(userDto);
-        if (result.success()) {
-            return ResponseEntity.ok().body(new MessageDto(result.message()));
+        boolean result = userService.registerUser(userDto.getName(), userDto.getEmail(), userDto.getPassword());
+        if (result) {
+            return ResponseEntity.ok().body(new MessageDto("Profile has been created"));
         } else {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(new MessageDto(result.message()));
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(new MessageDto("Cannot create profile"));
         }
     }
 
