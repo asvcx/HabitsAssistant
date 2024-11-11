@@ -3,7 +3,6 @@ package org.habitsapp.server;
 import org.habitsapp.model.Habit;
 import org.habitsapp.model.User;
 import org.habitsapp.server.repository.AccountRepoImpl;
-import org.habitsapp.model.result.AuthorizationResult;
 import org.habitsapp.server.security.JwtService;
 import org.habitsapp.server.service.HabitServiceImpl;
 import org.habitsapp.server.service.UserServiceImpl;
@@ -16,7 +15,7 @@ import java.security.NoSuchAlgorithmException;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class AccountRepositoryTest2 {
+public class AccountRepositoryTest {
 
     @Autowired
     private AccountRepoImpl repository;
@@ -81,7 +80,8 @@ public class AccountRepositoryTest2 {
         Habit changedHabit = existingHabit.clone();
         changedHabit.setTitle("NewTitle");
         // Then
-        assertThat(habitService.editHabit(existingUser.getId(), token, existingHabit, changedHabit)).isTrue();
+        assertThat(habitService.editHabit(existingUser.getId(), existingHabit.getTitle(),
+                changedHabit.getTitle(), changedHabit.getDescription(), changedHabit.getPeriod())).isTrue();
     }
 
     @Test
@@ -91,7 +91,8 @@ public class AccountRepositoryTest2 {
         Habit changedHabit = existingHabit.clone();
         changedHabit.setDescription("NewDescription");
         // Then
-        assertThat(habitService.editHabit(existingUser.getId(), token, existingHabit, changedHabit)).isTrue();
+        assertThat(habitService.editHabit(existingUser.getId(), existingHabit.getTitle(),
+                changedHabit.getTitle(), changedHabit.getDescription(), changedHabit.getPeriod())).isTrue();
     }
 
     @Test
@@ -101,23 +102,24 @@ public class AccountRepositoryTest2 {
         Habit changedHabit = existingHabit.clone();
         changedHabit.setPeriod(7);
         // Then
-        assertThat(habitService.editHabit(existingUser.getId(), token, existingHabit, changedHabit)).isTrue();
+        assertThat(habitService.editHabit(existingUser.getId(), existingHabit.getTitle(),
+                changedHabit.getTitle(), changedHabit.getDescription(), changedHabit.getPeriod())).isTrue();
     }
 
     @Test
     @DisplayName("Should mark existing habit as completed")
     void shouldMarkHabitInCollection() {
-        assertThat(habitService.markHabitAsCompleted(existingUser.getId(), token, existingHabit.getTitle())).isTrue();
-        assertThat(habitService.markHabitAsCompleted(user.getId(), token, habit.getTitle())).isFalse();
+        assertThat(habitService.markHabitAsCompleted(existingUser.getId(), existingHabit.getTitle())).isTrue();
+        assertThat(habitService.markHabitAsCompleted(user.getId(), habit.getTitle())).isFalse();
     }
 
     @Test
     @DisplayName("Should authorize the user or return null if credentials are wrong")
     void shouldAuthorizeUserAndThenReturnUserOrNull() {
-        AuthorizationResult correctAuthResult = userService.authorizeUser(existingUser.getEmail(), "ExistingPass");
-        AuthorizationResult wrongAuthResult = userService.authorizeUser(existingUser.getEmail(), "WrongPass");
-        assertThat(correctAuthResult.success()).isTrue();
-        assertThat(wrongAuthResult.success()).isFalse();
+        String correctAuthToken = userService.authorizeUser(existingUser.getEmail(), "ExistingPass");
+        String wrongAuthToken = userService.authorizeUser(existingUser.getEmail(), "WrongPass");
+        assertThat(correctAuthToken.isEmpty()).isFalse();
+        assertThat(wrongAuthToken.isEmpty()).isTrue();
     }
 
     @Test

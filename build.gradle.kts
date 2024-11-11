@@ -32,16 +32,10 @@ dependencies {
     runtimeOnly("io.jsonwebtoken:jjwt-orgjson:0.12.6")
 
     implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("org.springframework.boot:spring-boot-starter-data-rest")
-    implementation("org.springframework.boot:spring-boot-starter-aop")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 
-    implementation("io.springfox:springfox-swagger2:3.0.0")
-    implementation("io.springfox:springfox-swagger-ui:3.0.0")
-
     implementation("ch.qos.logback.db:logback-classic-db:1.2.11.1")
-
-    implementation("org.yaml:snakeyaml:2.3")
 
     testImplementation("org.assertj:assertj-core:3.25.3")
     testImplementation(platform("org.junit:junit-bom:5.10.2"))
