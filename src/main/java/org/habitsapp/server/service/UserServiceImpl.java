@@ -26,11 +26,11 @@ public class UserServiceImpl implements UserService {
         this.jwt = jwt;
     }
 
-    public String createToken(User user) {
+    public String createToken(long id, String name, String email, String accessLevel) {
         Map<String,String> payload = new HashMap<>();
-        payload.put("email", user.getEmail().toLowerCase());
-        payload.put("access", user.getAccessLevel().name());
-        return jwt.generateJwt(payload, user.getName(), String.valueOf(user.getId()));
+        payload.put("email", email.toLowerCase());
+        payload.put("access", accessLevel);
+        return jwt.generateJwt(payload, name, String.valueOf(id));
     }
 
     public String authorizeUser(String email, String password) {
@@ -45,7 +45,7 @@ public class UserServiceImpl implements UserService {
         if (!user.comparePassword(password)) {
             return "";
         }
-        return createToken(user);
+        return createToken(user.getId(), user.getName(), email, user.getAccessLevel().name());
     }
 
     public boolean registerUser(String name, String email, String password) {
@@ -71,17 +71,15 @@ public class UserServiceImpl implements UserService {
         return true;
     }
 
-    public boolean deleteUser(Long userId, String token, String password) {
-        Claims claims = jwt.extractClaims(token);
-        if (claims == null || !repository.checkPassword(userId, password)) {
+    public boolean deleteUser(Long userId, String password) {
+        if (!repository.checkPassword(userId, password)) {
             return false;
         }
         return repository.deleteUser(userId);
     }
 
-    public List<String> getUsersInfo(Long userId, String token) {
-        Claims claims = jwt.extractClaims(token);
-        if (claims == null || userId == null || token == null || !repository.isUserExists(userId)) {
+    public List<String> getUsersInfo(Long userId) {
+        if (userId == null || !repository.isUserExists(userId)) {
             return new LinkedList<>();
         }
         Optional<User> user = repository.getUserById(userId);
@@ -96,11 +94,10 @@ public class UserServiceImpl implements UserService {
                 .toList();
     }
 
-    public boolean manageUserProfile(Long adminId, String token, String emailToManage, String action) {
-        Claims claims = jwt.extractClaims(token);
+    public boolean manageUserProfile(Long adminId, String emailToManage, String action) {
         Optional<User> adminOpt = repository.getUserById(adminId);
         Optional<User> userOpt = repository.getUserByEmail(emailToManage);
-        if (claims == null || adminOpt.isEmpty() || userOpt.isEmpty()
+        if (adminOpt.isEmpty() || userOpt.isEmpty()
             || adminOpt.get().getAccessLevel() != AccessLevel.ADMIN) {
             return false;
         }
@@ -144,9 +141,8 @@ public class UserServiceImpl implements UserService {
         };
     }
 
-    public boolean editUserData(Long userId, String token, String newEmail, String newName) {
-        Claims claims = jwt.extractClaims(token);
-        if (claims == null || newEmail == null || newName == null) {
+    public boolean editUserData(Long userId, String newEmail, String newName) {
+        if (newEmail == null || newName == null) {
             return false;
         }
         if (!isEmailValid(newEmail) || !isNameValid(newName)) {
@@ -158,12 +154,11 @@ public class UserServiceImpl implements UserService {
         }
         user.get().setEmail(newEmail);
         user.get().setName(newName);
-        return repository.updateUser(userId, token, user.get());
+        return repository.updateUser(userId, user.get());
     }
 
-    public boolean editUserPassword(Long userId, String token, String oldPassword, String newPassword) {
-        Claims claims = jwt.extractClaims(token);
-        if (claims == null || !repository.checkPassword(userId, oldPassword)) {
+    public boolean editUserPassword(Long userId, String oldPassword, String newPassword) {
+        if (!repository.checkPassword(userId, oldPassword)) {
             return false;
         }
         Optional<User> user = repository.getUserById(userId);
@@ -172,7 +167,7 @@ public class UserServiceImpl implements UserService {
         }
         if (user.get().comparePassword(oldPassword)) {
             user.get().setPassword(newPassword);
-            return repository.updateUser(userId, token, user.get());
+            return repository.updateUser(userId, user.get());
         } else {
             return false;
         }

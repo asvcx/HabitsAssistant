@@ -1,11 +1,11 @@
 package org.habitsapp.server;
 
+import org.example.HabitService;
+import org.example.UserService;
 import org.habitsapp.model.Habit;
 import org.habitsapp.model.User;
-import org.habitsapp.server.repository.AccountRepoImpl;
+import org.habitsapp.server.repository.AccountRepo;
 import org.habitsapp.server.security.JwtService;
-import org.habitsapp.server.service.HabitServiceImpl;
-import org.habitsapp.server.service.UserServiceImpl;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,16 +18,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class AccountRepositoryTest {
 
     @Autowired
-    private AccountRepoImpl repository;
+    private AccountRepo repository;
 
     @Autowired
     private JwtService jwt;
 
     @Autowired
-    private UserServiceImpl userService;
+    private UserService userService;
 
     @Autowired
-    private HabitServiceImpl habitService;
+    private HabitService habitService;
 
     private final User user = new User("Name", "name@mail.ru", "UserPass");
     private final Habit habit = new Habit("Title", "Description", 1);
@@ -40,7 +40,8 @@ public class AccountRepositoryTest {
     void setUp() throws NoSuchAlgorithmException {
         repository.createUser(existingUser);
         repository.createHabit(existingUser.getId(), existingHabit);
-        token = userService.createToken(existingUser);
+        token = userService.createToken(existingUser.getId(), existingUser.getName(),
+                existingUser.getEmail(), existingUser.getAccessLevel().name());
     }
 
     @AfterEach
@@ -132,14 +133,14 @@ public class AccountRepositoryTest {
         assertThat(repository.isUserExists(newEmail)).isFalse();
 
         // When
-        boolean isChanged = userService.editUserData(existingUser.getId(), token, newEmail, existingUser.getName());
+        boolean isChanged = userService.editUserData(existingUser.getId(), newEmail, existingUser.getName());
         assertThat(isChanged).isTrue();
         // Then
         assertThat(repository.isUserExists(oldEmail)).isFalse();
         assertThat(repository.isUserExists(newEmail)).isTrue();
 
         // When
-        boolean isUnchanged = userService.editUserData(existingUser.getId(), token, oldEmail, existingUser.getName());
+        boolean isUnchanged = userService.editUserData(existingUser.getId(), oldEmail, existingUser.getName());
         assertThat(isUnchanged).isTrue();
         // Then
         assertThat(repository.isUserExists(oldEmail)).isTrue();

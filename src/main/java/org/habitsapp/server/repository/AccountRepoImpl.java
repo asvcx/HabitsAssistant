@@ -73,7 +73,7 @@ public class AccountRepoImpl implements AccountRepo {
         return true;
     }
 
-    public boolean updateUser(Long id, String token, User changedUser) {
+    public boolean updateUser(Long id, User changedUser) {
         Optional<User> userOpt = database.loadUser(id);
         if (userOpt.isEmpty()) {
             return false;

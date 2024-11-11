@@ -25,15 +25,14 @@ public class Password {
 
     @PutMapping
     protected ResponseEntity<MessageDto> change(@RequestBody PasswordChangeDto pswChange, HttpServletRequest req) {
-        String token = TokenReader.readToken(req, repository);
-        if (token == null || token.isEmpty() || pswChange == null) {
+        if (pswChange == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         // Try to change user password
         long id = Long.parseLong((String)req.getAttribute("id"));
         Optional<User> user = repository.getUserById(id);
         boolean isChanged = user.isPresent() && userService.editUserPassword(
-                id, token, pswChange.getOldPassword(), pswChange.getNewPassword()
+                id, pswChange.getOldPassword(), pswChange.getNewPassword()
         );
         if (isChanged) {
             return ResponseEntity.ok().body(new MessageDto("Password changed successfully"));

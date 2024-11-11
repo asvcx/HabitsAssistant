@@ -46,21 +46,15 @@ public class Profile {
      */
     @PutMapping
     public ResponseEntity<MessageDto> change(@RequestBody ProfileChangeDto usrChange, HttpServletRequest req) {
-        String token = TokenReader.readToken(req, repository);
-        if (token == null || token.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new MessageDto("You have not been authorized"));
-        }
         if (usrChange == null || usrChange.getOldEmail() == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new MessageDto("Cannot get new value for field"));
         }
-
         // Try to change user profile
         long id = Long.parseLong((String)req.getAttribute("id"));
         Optional<User> user = repository.getUserById(id);
         boolean isChanged = user.isPresent() && userService.editUserData(
-                id, token, usrChange.getNewEmail(), usrChange.getNewName()
+                id, usrChange.getNewEmail(), usrChange.getNewName()
         );
         if (isChanged) {
             return ResponseEntity.ok()
@@ -76,16 +70,15 @@ public class Profile {
      */
     @PostMapping("/delete")
     public ResponseEntity<MessageDto> delete(@RequestBody PasswordConfirmDto confirmation, HttpServletRequest req) {
-        String token = TokenReader.readToken(req, repository);
         String password = confirmation.getPassword();
-        if (token == null || token.isEmpty() || password == null || password.isEmpty()) {
+        if (password == null || password.isEmpty()) {
             return ResponseEntity.badRequest()
                     .body(new MessageDto("You have not been authorized"));
         }
         // Try to delete user profile
         long id = Long.parseLong((String)req.getAttribute("id"));
         Optional<User> user = repository.getUserById(id);
-        boolean isDeleted = user.isPresent() && userService.deleteUser(id, token, user.get().getPassword());
+        boolean isDeleted = user.isPresent() && userService.deleteUser(id, user.get().getPassword());
         if (isDeleted) {
             return ResponseEntity.ok()
                     .body(new MessageDto("Profile deleted successfully"));

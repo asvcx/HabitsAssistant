@@ -30,8 +30,6 @@ public class Habit {
      */
     @GetMapping
     protected ResponseEntity<Set<HabitDto>> getAll(HttpServletRequest req) {
-        // Check token
-        String token = TokenReader.readToken(req, repository);
         long id = Long.parseLong((String)req.getAttribute("id"));
         Optional<User> user = repository.getUserById(id);
         if (user.isEmpty()) {
@@ -51,7 +49,6 @@ public class Habit {
      */
     @PostMapping
     protected ResponseEntity<MessageDto> create(@RequestBody HabitDto habitDto, HttpServletRequest req) {
-        String token = TokenReader.readToken(req, repository);
         long id = Long.parseLong((String)req.getAttribute("id"));
         Optional<User> user = repository.getUserById(id);
         if(habitDto == null || user.isEmpty()) {
@@ -72,8 +69,7 @@ public class Habit {
      */
     @PutMapping
     protected ResponseEntity<MessageDto> change(@RequestBody HabitChangeDto hbtChange, HttpServletRequest req) {
-        String token = TokenReader.readToken(req, repository);
-        if (token == null || token.isEmpty() || hbtChange == null) {
+        if (hbtChange == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         // Try to change habit
@@ -95,11 +91,6 @@ public class Habit {
      */
     @PutMapping("/mark")
     protected ResponseEntity<MessageDto> mark(HttpServletRequest req) {
-        // Check token
-        String token = TokenReader.readToken(req, repository);
-        if (token == null || token.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
         // Check habit title
         String habitTitle = req.getParameter("title");
         if (habitTitle == null || habitTitle.isEmpty()) {
@@ -124,11 +115,9 @@ public class Habit {
      */
     @DeleteMapping
     protected ResponseEntity<MessageDto> delete(@RequestParam("title") String habitTitle, HttpServletRequest req) {
-        // Check token
-        String token = TokenReader.readToken(req, repository);
         long id = Long.parseLong((String)req.getAttribute("id"));
         Optional<User> user = repository.getUserById(id);
-        if (token == null || token.isEmpty() || user.isEmpty()) {
+        if (user.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         // Check habit title

@@ -19,7 +19,7 @@ public interface AccountRepo {
     boolean isUserExists(long id);
 
     boolean createUser(User user);
-    boolean updateUser(Long id, String token, User changedUser);
+    boolean updateUser(Long id, User changedUser);
     boolean updateUser(Long id, Consumer<User> userAction);
     boolean deleteUser(Long id);
 
