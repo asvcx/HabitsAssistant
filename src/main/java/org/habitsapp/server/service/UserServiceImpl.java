@@ -1,6 +1,5 @@
 package org.habitsapp.server.service;
 
-import io.jsonwebtoken.Claims;
 import org.example.UserService;
 import org.habitsapp.model.AccessLevel;
 import org.habitsapp.model.User;
@@ -127,13 +126,13 @@ public class UserServiceImpl implements UserService {
         return switch (profileAction) {
             case ProfileAction.BLOCK -> {
                 if (!user.isBlocked()) {
-                    yield repository.updateUser(user.getId(), User::block);
+                    yield repository.setUserBlockStatus(user.getId(), User::block);
                 }
                 yield false;
             }
             case ProfileAction.UNBLOCK -> {
                 if (user.isBlocked()) {
-                    yield repository.updateUser(user.getId(), User::unblock);
+                    yield repository.setUserBlockStatus(user.getId(), User::unblock);
                 }
                 yield false;
             }

@@ -129,22 +129,24 @@ public class AccountRepositoryTest {
         // Given
         String oldEmail = existingUser.getEmail();
         String newEmail = "changed@mail.ru";
-        assertThat(repository.isUserExists(existingUser.getEmail())).isTrue();
-        assertThat(repository.isUserExists(newEmail)).isFalse();
 
-        // When
+        // Check initial state
+        assertThat(repository.isUserExists(existingUser.getEmail())).as("Check that actual email exists").isTrue();
+        assertThat(repository.isUserExists(newEmail)).isFalse().as("Check that new email does not exists yet");
+
+        // When: Try to change email
         boolean isChanged = userService.editUserData(existingUser.getId(), newEmail, existingUser.getName());
-        assertThat(isChanged).isTrue();
-        // Then
-        assertThat(repository.isUserExists(oldEmail)).isFalse();
-        assertThat(repository.isUserExists(newEmail)).isTrue();
+        assertThat(isChanged).as("Check result of email change").isTrue();
+        // Then: Check email change was successful
+        assertThat(repository.isUserExists(oldEmail)).as("Check that old email no longer exists").isFalse();
+        assertThat(repository.isUserExists(newEmail)).as("Check that new email exists").isTrue();
 
         // When
         boolean isUnchanged = userService.editUserData(existingUser.getId(), oldEmail, existingUser.getName());
-        assertThat(isUnchanged).isTrue();
+        assertThat(isUnchanged).as("Check result of reverting to old email").isTrue();
         // Then
-        assertThat(repository.isUserExists(oldEmail)).isTrue();
-        assertThat(repository.isUserExists(newEmail)).isFalse();
+        assertThat(repository.isUserExists(oldEmail)).as("Check that old email exists again").isTrue();
+        assertThat(repository.isUserExists(newEmail)).as("Check that new email no longer exists").isFalse();
     }
 
     @Test

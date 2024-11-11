@@ -20,7 +20,7 @@ public interface AccountRepo {
 
     boolean createUser(User user);
     boolean updateUser(Long id, User changedUser);
-    boolean updateUser(Long id, Consumer<User> userAction);
+    boolean setUserBlockStatus(Long id, Consumer<User> userAction);
     boolean deleteUser(Long id);
 
     boolean createHabit(Long id, Habit habit);

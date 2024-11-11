@@ -78,12 +78,11 @@ public class AccountRepoImpl implements AccountRepo {
         if (userOpt.isEmpty()) {
             return false;
         }
-        User user = userOpt.get();
-        database.updateUser(user);
+        database.updateUser(changedUser);
         return true;
     }
 
-    public boolean updateUser(Long id, Consumer<User> userAction) {
+    public boolean setUserBlockStatus(Long id, Consumer<User> userAction) {
         Optional<User> user = database.loadUser(id);
         if (user.isPresent() && userAction != null) {
             userAction.accept(user.get());

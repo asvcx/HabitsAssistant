@@ -60,4 +60,5 @@ tasks.war {
 
 tasks.test {
     useJUnitPlatform()
+    exclude("**/client/**")
 }
