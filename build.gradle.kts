@@ -2,8 +2,8 @@ plugins {
     id("java")
     application
     war
-    id("org.springframework.boot") version "3.2.0"
-    id("io.spring.dependency-management") version "1.1.4"
+    id("org.springframework.boot") version "3.3.3"
+    id("io.spring.dependency-management") version "1.1.6"
 }
 
 group = "org.habitsapp"
@@ -46,7 +46,7 @@ dependencies {
     testImplementation("org.testcontainers:postgresql:1.20.1")
     testImplementation("org.skyscreamer:jsonassert:1.5.3")
 
-    implementation("org.example:audit-starter:1.0.3")
+    implementation("org.habitsapp:audit-starter:1.0.4")
 }
 
 application {

@@ -3,8 +3,8 @@ package org.habitsapp.server.repository;
 import org.habitsapp.server.migration.DatabaseConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.DependsOn;
-import org.springframework.stereotype.Component;
 
 import java.sql.*;
 import java.time.Instant;
@@ -12,10 +12,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.LinkedList;
 
-import org.example.AuditRepo;
-import org.example.AuditEvent;
+import org.habitsapp.contract.AuditRepo;
+import org.habitsapp.model.AuditEvent;
+import org.springframework.stereotype.Repository;
 
-@Component
+@Repository
 @DependsOn("migration")
 public class AuditRepoImpl implements AuditRepo {
     private final Logger logger = LoggerFactory.getLogger(AuditRepoImpl.class);
@@ -26,6 +27,7 @@ public class AuditRepoImpl implements AuditRepo {
     private final String LOG_SCHEMA_NAME;
     private final String TBL_LOG_NAME;
 
+    @Autowired
     public AuditRepoImpl(DatabaseConfig dbConfig) {
         DB_URL = dbConfig.getUrl();
         DB_USER_NAME = dbConfig.getUsername();

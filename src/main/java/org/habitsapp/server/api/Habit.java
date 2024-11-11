@@ -8,7 +8,7 @@ import org.habitsapp.model.User;
 import org.habitsapp.model.dto.HabitDto;
 import org.habitsapp.model.dto.HabitMapper;
 import org.habitsapp.server.repository.AccountRepo;
-import org.example.HabitService;
+import org.habitsapp.contract.HabitService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

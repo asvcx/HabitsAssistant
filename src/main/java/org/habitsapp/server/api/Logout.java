@@ -3,7 +3,7 @@ package org.habitsapp.server.api;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.habitsapp.exchange.MessageDto;
-import org.example.UserService;
+import org.habitsapp.contract.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;

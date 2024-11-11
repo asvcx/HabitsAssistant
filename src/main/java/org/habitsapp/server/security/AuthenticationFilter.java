@@ -41,7 +41,6 @@ public class AuthenticationFilter extends OncePerRequestFilter {
             request.setAttribute("id", claims.getId());
             request.setAttribute("email", claims.get("email"));
             request.setAttribute("access", claims.get("access"));
-            System.out.printf("id = %s; email = %s; access = %s%n", claims.getId(), claims.get("email"), claims.get("access"));
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;

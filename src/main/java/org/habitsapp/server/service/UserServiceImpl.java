@@ -1,6 +1,6 @@
 package org.habitsapp.server.service;
 
-import org.example.UserService;
+import org.habitsapp.contract.UserService;
 import org.habitsapp.model.AccessLevel;
 import org.habitsapp.model.User;
 import org.habitsapp.server.repository.AccountRepo;

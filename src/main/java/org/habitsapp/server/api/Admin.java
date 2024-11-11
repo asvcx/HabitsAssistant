@@ -6,7 +6,7 @@ import org.habitsapp.exchange.MessageDto;
 import org.habitsapp.model.AccessLevel;
 import org.habitsapp.model.User;
 import org.habitsapp.server.repository.AccountRepo;
-import org.example.UserService;
+import org.habitsapp.contract.UserService;
 import java.util.List;
 import java.util.Optional;
 

@@ -7,7 +7,7 @@ import org.habitsapp.exchange.ProfileChangeDto;
 import org.habitsapp.model.User;
 import org.habitsapp.model.dto.UserDto;
 import org.habitsapp.server.repository.AccountRepo;
-import org.example.UserService;
+import org.habitsapp.contract.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

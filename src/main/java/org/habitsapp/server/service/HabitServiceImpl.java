@@ -1,6 +1,6 @@
 package org.habitsapp.server.service;
 
-import org.example.HabitService;
+import org.habitsapp.contract.HabitService;
 import org.habitsapp.model.Habit;
 import org.habitsapp.server.repository.AccountRepo;
 import org.springframework.beans.factory.annotation.Autowired;

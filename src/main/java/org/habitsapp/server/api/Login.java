@@ -2,9 +2,10 @@ package org.habitsapp.server.api;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.habitsapp.annotation.EnableExecMeasurement;
 import org.habitsapp.exchange.MessageDto;
 import org.habitsapp.model.dto.UserDto;
-import org.example.UserService;
+import org.habitsapp.contract.UserService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,7 @@ public class Login {
      * Login to profile
      */
     @PostMapping
+    @EnableExecMeasurement
     protected ResponseEntity<MessageDto> login(@RequestBody UserDto userDto, HttpServletRequest req) {
         if (userDto == null || userDto.getEmail() == null || userDto.getPassword() == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
