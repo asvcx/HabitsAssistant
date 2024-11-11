@@ -13,7 +13,7 @@ public class AuditUserAspect {
 
     private AuditRepo auditRepo;
 
-    @Pointcut("execution(* *..UserService.*(..)) || execution(* *..UserService+.*(..)) || execution(* *..UserServiceImpl.*(..))")
+    @Pointcut("execution(* *..UserService+.*(..))")
     public void userServiceMethods() {}
 
     @Around("userServiceMethods()")

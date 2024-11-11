@@ -13,7 +13,7 @@ public class AuditHabitAspect {
 
     private AuditRepo auditRepo;
 
-    @Pointcut(value = "execution(* *..HabitService.*(..)) || execution(* *..HabitService+.*(..)) || execution(* *..HabitServiceImpl.*(..))")
+    @Pointcut(value = "execution(* *..HabitService+.*(..))")
     public void habitServiceMethods() {}
 
     @Around("habitServiceMethods()")
