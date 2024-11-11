@@ -1,6 +1,7 @@
 package org.habitsapp.server;
 
-import org.example.UserService;
+import org.habitsapp.Application;
+import org.habitsapp.contract.UserService;
 import org.habitsapp.exchange.AdminActionDto;
 import org.habitsapp.exchange.PasswordConfirmDto;
 import org.habitsapp.model.dto.HabitDto;
@@ -22,7 +23,7 @@ import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 public class ControllerTest {
 

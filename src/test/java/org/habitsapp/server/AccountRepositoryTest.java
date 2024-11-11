@@ -1,7 +1,8 @@
 package org.habitsapp.server;
 
-import org.example.HabitService;
-import org.example.UserService;
+import org.habitsapp.Application;
+import org.habitsapp.contract.HabitService;
+import org.habitsapp.contract.UserService;
 import org.habitsapp.model.Habit;
 import org.habitsapp.model.User;
 import org.habitsapp.server.repository.AccountRepo;
@@ -14,7 +15,7 @@ import java.security.NoSuchAlgorithmException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class AccountRepositoryTest {
 
     @Autowired
