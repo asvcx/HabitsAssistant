@@ -11,7 +11,7 @@ public class UserValidator {
     }
 
     public static boolean isEmailValid(String email) {
-        return email.matches("^[\\w-]+(\\.[\\w-]+)*@[\\w-]+(\\.[\\w-]{2,})+$");
+        return email.toLowerCase().matches("^[\\w-]+(\\.[\\w-]+)*@[\\w-]+(\\.[\\w-]{2,})+$");
     }
 
     public static boolean isPasswordValid(String password) {

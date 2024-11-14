@@ -30,7 +30,6 @@ public class AuthenticationFilter extends OncePerRequestFilter {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
-        System.out.println("Jwt is initialized: " + (jwt != null));
         String token = bearer.substring(7);
         TokenStatus status = jwt.getTokenStatus(token);
         if (status == TokenStatus.EXPIRED || status == TokenStatus.INCORRECT) {

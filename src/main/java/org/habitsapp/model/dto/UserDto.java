@@ -5,24 +5,24 @@ import org.habitsapp.model.AccessLevel;
 
 @Data
 public class UserDto implements Cloneable {
-    private long id;
+    private Long id;
     private String name;
-    private String password;
     private String email;
+    private String password;
     private AccessLevel accessLevel;
 
     public UserDto() {
         accessLevel = AccessLevel.USER;
     }
 
-    public UserDto(long id, String email, String password) {
+    public UserDto(Long id, String email, String password) {
         this();
         this.id = id;
         this.email = email;
         this.password = password;
     }
 
-    public UserDto(String name, String email, String password, AccessLevel accessLevel) {
+    public UserDto(Long id, String name, String email, String password, AccessLevel accessLevel) {
         this.name = name;
         this.email = email;
         this.password = password;

@@ -1,4 +1,4 @@
-package org.habitsapp.server.controller;
+package org.habitsapp.server.api;
 
 import lombok.RequiredArgsConstructor;
 import org.habitsapp.exchange.MessageDto;
@@ -6,9 +6,8 @@ import org.habitsapp.exchange.PasswordConfirmDto;
 import org.habitsapp.exchange.ProfileChangeDto;
 import org.habitsapp.model.User;
 import org.habitsapp.model.dto.UserDto;
-import org.habitsapp.model.result.RegistrationResult;
 import org.habitsapp.server.repository.AccountRepo;
-import org.habitsapp.server.service.UserService;
+import org.habitsapp.contract.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +17,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/profile")
 @RequiredArgsConstructor
-public class ProfileController {
+public class Profile {
 
     private final UserService userService;
     private final AccountRepo repository;
@@ -26,7 +25,7 @@ public class ProfileController {
     /**
      *  Create user profile
      */
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<MessageDto> create(@RequestBody UserDto userDto, HttpServletRequest req) {
         // Check dto
         if (userDto == null || userDto.getEmail() == null
@@ -34,11 +33,11 @@ public class ProfileController {
             return ResponseEntity.badRequest().body(new MessageDto("User data have not been provided"));
         }
         // Try to create user profile
-        RegistrationResult result = userService.registerUser(userDto);
-        if (result.success()) {
-            return ResponseEntity.ok().body(new MessageDto(result.message()));
+        boolean result = userService.registerUser(userDto.getName(), userDto.getEmail(), userDto.getPassword());
+        if (result) {
+            return ResponseEntity.ok().body(new MessageDto("Profile has been created"));
         } else {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(new MessageDto(result.message()));
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(new MessageDto("Cannot create profile"));
         }
     }
 
@@ -47,21 +46,15 @@ public class ProfileController {
      */
     @PutMapping
     public ResponseEntity<MessageDto> change(@RequestBody ProfileChangeDto usrChange, HttpServletRequest req) {
-        String token = TokenReader.readToken(req, repository);
-        if (token == null || token.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new MessageDto("You have not been authorized"));
-        }
         if (usrChange == null || usrChange.getOldEmail() == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new MessageDto("Cannot get new value for field"));
         }
-
         // Try to change user profile
-        long id = (long) req.getAttribute("id");
+        long id = Long.parseLong((String)req.getAttribute("id"));
         Optional<User> user = repository.getUserById(id);
         boolean isChanged = user.isPresent() && userService.editUserData(
-                usrChange.getOldEmail(), token, usrChange.getNewEmail(), usrChange.getNewName()
+                id, usrChange.getNewEmail(), usrChange.getNewName()
         );
         if (isChanged) {
             return ResponseEntity.ok()
@@ -77,16 +70,15 @@ public class ProfileController {
      */
     @PostMapping("/delete")
     public ResponseEntity<MessageDto> delete(@RequestBody PasswordConfirmDto confirmation, HttpServletRequest req) {
-        String token = TokenReader.readToken(req, repository);
         String password = confirmation.getPassword();
-        if (token == null || token.isEmpty() || password == null || password.isEmpty()) {
+        if (password == null || password.isEmpty()) {
             return ResponseEntity.badRequest()
                     .body(new MessageDto("You have not been authorized"));
         }
         // Try to delete user profile
-        long id = (long) req.getAttribute("id");
+        long id = Long.parseLong((String)req.getAttribute("id"));
         Optional<User> user = repository.getUserById(id);
-        boolean isDeleted = user.isPresent() && userService.deleteUser(user.get().getEmail(), token, user.get().getPassword());
+        boolean isDeleted = user.isPresent() && userService.deleteUser(id, user.get().getPassword());
         if (isDeleted) {
             return ResponseEntity.ok()
                     .body(new MessageDto("Profile deleted successfully"));

@@ -12,31 +12,22 @@ public interface AccountRepo {
     List<User> getUsers();
     Optional<User> getUserByEmail(String email);
     Optional<User> getUserById(long id);
-    Optional<Map<String,Habit>> getHabitsOfUser(String email);
-    Optional<Habit> getHabitByTitle(String email, String title);
+    Optional<Map<String,Habit>> getHabitsOfUser(Long id);
+    Optional<Habit> getHabitByTitle(Long id, String title);
 
     boolean isUserExists(String email);
     boolean isUserExists(long id);
 
     boolean createUser(User user);
-    boolean updateUser(String email, String token, User changedUser);
-    boolean updateUser(String email, Consumer<User> userAction);
-    boolean deleteUser(String email, String token);
+    boolean updateUser(Long id, User changedUser);
+    boolean setUserBlockStatus(Long id, Consumer<User> userAction);
+    boolean deleteUser(Long id);
 
-    boolean createHabit(String email, Habit habit);
-    boolean updateHabit(String email, Habit oldHabit, Habit newHabit);
-    boolean markHabit(String email, Habit habit);
-    boolean deleteHabit(String email, String title);
-
-//    boolean isTokenExists(String token);
-//    boolean isUserAuthorized(String token);
-//    Optional<User> getUserByToken(String token);
-//    void addToken(String token, User user);
-//    boolean removeToken(String token);
-//    boolean checkToken(String email, String token);
-//    boolean cancelToken(String token);
-
-    boolean checkPassword(String email, String password);
+    boolean createHabit(Long id, Habit habit);
+    boolean updateHabit(Long id, String oldTitle, String title, String description, int period);
+    boolean markHabit(Long id, Habit habit);
+    boolean deleteHabit(Long id, String title);
+    boolean checkPassword(Long id, String password);
 
 
 }

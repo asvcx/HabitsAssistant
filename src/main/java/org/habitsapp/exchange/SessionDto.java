@@ -7,6 +7,7 @@ import org.habitsapp.model.AccessLevel;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SessionDto {
+    private Long id;
     private String userName;
     private String userEmail;
     private AccessLevel accessLevel;

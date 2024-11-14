@@ -1,7 +1,9 @@
 plugins {
     id("java")
+    application
     war
-    id("io.freefair.aspectj.post-compile-weaving") version "8.10.2"
+    id("org.springframework.boot") version "3.3.3"
+    id("io.spring.dependency-management") version "1.1.6"
 }
 
 group = "org.habitsapp"
@@ -9,6 +11,7 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
+    mavenLocal()
 }
 
 dependencies {
@@ -17,6 +20,22 @@ dependencies {
 
     implementation("org.mapstruct:mapstruct:1.5.5.Final")
     annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
+    implementation("com.fasterxml.jackson.core:jackson-core:2.17.2")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.17.2")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.2")
+
+    implementation("org.postgresql:postgresql:42.7.2")
+    implementation("org.liquibase:liquibase-core:4.9.1")
+
+    implementation("io.jsonwebtoken:jjwt-api:0.12.6")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
+    runtimeOnly("io.jsonwebtoken:jjwt-orgjson:0.12.6")
+
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+
+    implementation("ch.qos.logback.db:logback-classic-db:1.2.11.1")
 
     testImplementation("org.assertj:assertj-core:3.25.3")
     testImplementation(platform("org.junit:junit-bom:5.10.2"))
@@ -27,38 +46,11 @@ dependencies {
     testImplementation("org.testcontainers:postgresql:1.20.1")
     testImplementation("org.skyscreamer:jsonassert:1.5.3")
 
-    implementation("org.postgresql:postgresql:42.7.2")
-    implementation("org.liquibase:liquibase-core:4.9.1")
+    implementation("org.habitsapp:audit-starter:1.0.4")
+}
 
-    implementation("org.slf4j:slf4j-api:2.0.13")
-    implementation("ch.qos.logback:logback-classic:1.5.6")
-
-    implementation("jakarta.annotation:jakarta.annotation-api:3.0.0")
-    implementation("jakarta.servlet:jakarta.servlet-api:6.1.0")
-
-    implementation("com.fasterxml.jackson.core:jackson-core:2.17.2")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.17.2")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.2")
-
-    implementation("io.jsonwebtoken:jjwt-api:0.12.6")
-    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")
-    runtimeOnly("io.jsonwebtoken:jjwt-orgjson:0.12.6")
-
-    implementation("org.aspectj:aspectjrt:1.9.22")
-    implementation("org.aspectj:aspectjweaver:1.9.22")
-
-    implementation("org.springframework:spring-context:6.1.11")
-    implementation("org.springframework:spring-web:6.1.11")
-    implementation("org.springframework:spring-webmvc:6.1.11")
-    implementation("org.springframework:spring-aop:6.1.11")
-
-    implementation("io.springfox:springfox-swagger2:3.0.0")
-    implementation("io.springfox:springfox-swagger-ui:3.0.0")
-
-    implementation("org.yaml:snakeyaml:2.3")
-
-    testImplementation("org.springframework:spring-test:6.1.11")
-    testImplementation("org.springframework:spring-webmvc:6.1.11")
+application {
+    mainClass.set("org.habitsapp.Application")
 }
 
 tasks.war {
@@ -68,4 +60,5 @@ tasks.war {
 
 tasks.test {
     useJUnitPlatform()
+    exclude("**/client/**")
 }

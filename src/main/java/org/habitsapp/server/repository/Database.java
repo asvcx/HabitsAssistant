@@ -8,8 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public interface Database {
-    //List<User> loadUsers();
-    //Map<Long,List<Habit>> loadHabits();
+    List<User> loadUsers();
     Optional<User> loadUser(long id);
     Optional<User> loadUser(String email);
     Map<String,Habit> loadHabits(long userId);
@@ -18,7 +17,5 @@ public interface Database {
     boolean updateUser(User user);
     boolean updateHabit(long userID, Habit habit);
     boolean removeUser(User user);
-    boolean removeUser(long id, String email);
     boolean removeHabit(long userID, String title);
-    boolean removeHabit(long userID, int habitId);
 }

@@ -15,7 +15,7 @@ public class AccountRepoImpl implements AccountRepo {
     }
 
     public List<User> getUsers() {
-        return new LinkedList<>();
+        return database.loadUsers();
     }
 
     public Optional<User> getUserByEmail(String email) {
@@ -26,8 +26,8 @@ public class AccountRepoImpl implements AccountRepo {
         return database.loadUser(id);
     }
 
-    public Optional<Map<String,Habit>> getHabitsOfUser(String email) {
-        Optional<User> userOpt = database.loadUser(email.toLowerCase());
+    public Optional<Map<String,Habit>> getHabitsOfUser(Long id) {
+        Optional<User> userOpt = database.loadUser(id);
         if (userOpt.isEmpty()) {
             return Optional.empty();
         }
@@ -36,8 +36,8 @@ public class AccountRepoImpl implements AccountRepo {
         return Optional.of(habits);
     }
 
-    public Optional<Habit> getHabitByTitle(String email, String title) {
-        Optional<Map<String,Habit>> habits = getHabitsOfUser(email);
+    public Optional<Habit> getHabitByTitle(Long id, String title) {
+        Optional<Map<String,Habit>> habits = getHabitsOfUser(id);
         return habits.map(stringHabitMap -> stringHabitMap.get(title));
     }
 
@@ -59,23 +59,13 @@ public class AccountRepoImpl implements AccountRepo {
         return false;
     }
 
-    public boolean updateUser(String email, String token, User changedUser) {
-        Optional<User> userOpt = database.loadUser(email.toLowerCase());
+    public boolean deleteUser(Long id) {
+        Optional<User> userOpt = database.loadUser(id);
         if (userOpt.isEmpty()) {
             return false;
         }
         User user = userOpt.get();
-        database.updateUser(user);
-        return true;
-    }
-
-    public boolean deleteUser(String email, String token) {
-        Optional<User> userOpt = database.loadUser(email.toLowerCase());
-        if (userOpt.isEmpty()) {
-            return false;
-        }
-        User user = userOpt.get();
-        Map<String,Habit> habits = getHabitsOfUser(user.getEmail()).orElseGet(LinkedHashMap::new);
+        Map<String,Habit> habits = getHabitsOfUser(id).orElseGet(LinkedHashMap::new);
         for (Habit habit : habits.values()) {
             database.removeHabit(user.getId() , habit.getTitle());
         }
@@ -83,8 +73,17 @@ public class AccountRepoImpl implements AccountRepo {
         return true;
     }
 
-    public boolean updateUser(String email, Consumer<User> userAction) {
-        Optional<User> user = database.loadUser(email.toLowerCase());
+    public boolean updateUser(Long id, User changedUser) {
+        Optional<User> userOpt = database.loadUser(id);
+        if (userOpt.isEmpty()) {
+            return false;
+        }
+        database.updateUser(changedUser);
+        return true;
+    }
+
+    public boolean setUserBlockStatus(Long id, Consumer<User> userAction) {
+        Optional<User> user = database.loadUser(id);
         if (user.isPresent() && userAction != null) {
             userAction.accept(user.get());
             database.updateUser(user.get());
@@ -93,23 +92,24 @@ public class AccountRepoImpl implements AccountRepo {
         return false;
     }
 
-    public boolean updateHabit(String email, Habit oldHabit, Habit newHabit) {
-        Map<String,Habit> userHabits = getHabitsOfUser(email).orElseGet(LinkedHashMap::new);
-        Optional<User> user = database.loadUser(email.toLowerCase());
-        if (!userHabits.containsKey(oldHabit.getTitle()) || user.isEmpty()) {
+    public boolean updateHabit(Long userId, String oldTitle, String title, String description, int period) {
+        Map<String,Habit> userHabits = getHabitsOfUser(userId).orElseGet(LinkedHashMap::new);
+        Optional<User> user = database.loadUser(userId);
+        if (!userHabits.containsKey(oldTitle) || user.isEmpty()) {
             return false;
         }
-        userHabits.remove(oldHabit.getTitle());
-        oldHabit.setTitle(newHabit.getTitle());
-        oldHabit.setDescription(newHabit.getDescription());
-        oldHabit.setPeriod(newHabit.getPeriod());
-        userHabits.put(oldHabit.getTitle(), oldHabit);
-        database.updateHabit(user.get().getId(), oldHabit);
+        Habit habit = new Habit();
+        userHabits.remove(oldTitle);
+        habit.setTitle(title);
+        habit.setDescription(description);
+        habit.setPeriod(period);
+        userHabits.put(habit.getTitle(), habit);
+        database.updateHabit(user.get().getId(), habit);
         return true;
     }
 
-    public boolean markHabit(String email, Habit habit) {
-        Optional<User> user = database.loadUser(email.toLowerCase());
+    public boolean markHabit(Long userId, Habit habit) {
+        Optional<User> user = database.loadUser(userId);
         if (user.isEmpty()) {
             return false;
         }
@@ -117,8 +117,8 @@ public class AccountRepoImpl implements AccountRepo {
         return true;
     }
 
-    public boolean createHabit(String email, Habit habit) {
-        Optional<User> user = database.loadUser(email.toLowerCase());
+    public boolean createHabit(Long userId, Habit habit) {
+        Optional<User> user = database.loadUser(userId);
         if (user.isPresent()) {
             habit.setUserId(user.get().getId());
             database.saveHabit(user.get().getId(), habit);
@@ -127,13 +127,13 @@ public class AccountRepoImpl implements AccountRepo {
         return false;
     }
 
-    public boolean deleteHabit(String email, String title) {
-        Optional<User> user = database.loadUser(email.toLowerCase());
+    public boolean deleteHabit(Long userId, String title) {
+        Optional<User> user = database.loadUser(userId);
         return user.filter(u -> database.removeHabit(u.getId(), title)).isPresent();
     }
 
-    public boolean checkPassword(String email, String password) {
-        Optional<User> user = database.loadUser(email.toLowerCase());
+    public boolean checkPassword(Long userId, String password) {
+        Optional<User> user = database.loadUser(userId);
         return user.isPresent() && password.equals(user.get().getPassword());
     }
 

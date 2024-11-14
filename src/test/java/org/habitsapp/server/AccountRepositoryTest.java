@@ -1,24 +1,34 @@
 package org.habitsapp.server;
 
+import org.habitsapp.Application;
+import org.habitsapp.contract.HabitService;
+import org.habitsapp.contract.UserService;
 import org.habitsapp.model.Habit;
 import org.habitsapp.model.User;
-import org.habitsapp.server.migration.DatabaseConfig;
-import org.habitsapp.server.repository.AccountRepoImpl;
-import org.habitsapp.model.result.AuthorizationResult;
-import org.habitsapp.server.repository.DatabasePostgres;
+import org.habitsapp.server.repository.AccountRepo;
 import org.habitsapp.server.security.JwtService;
-import org.habitsapp.server.service.HabitServiceImpl;
-import org.habitsapp.server.service.UserServiceImpl;
 import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+
 import java.security.NoSuchAlgorithmException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@SpringBootTest(classes = Application.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class AccountRepositoryTest {
 
-    AccountRepoImpl repository;
-    private UserServiceImpl userService;
-    private HabitServiceImpl habitService;
+    @Autowired
+    private AccountRepo repository;
+
+    @Autowired
+    private JwtService jwt;
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private HabitService habitService;
 
     private final User user = new User("Name", "name@mail.ru", "UserPass");
     private final Habit habit = new Habit("Title", "Description", 1);
@@ -29,22 +39,17 @@ public class AccountRepositoryTest {
 
     @BeforeEach
     void setUp() throws NoSuchAlgorithmException {
-        repository = new AccountRepoImpl(new DatabasePostgres(new DatabaseConfig()));
         repository.createUser(existingUser);
-        repository.createHabit(existingUser.getEmail(), existingHabit);
-        JwtService jwt = new JwtService();
-        userService = new UserServiceImpl(repository, jwt);
-        habitService = new HabitServiceImpl(repository, jwt);
-        token = userService.createToken(existingUser);
+        repository.createHabit(existingUser.getId(), existingHabit);
+        token = userService.createToken(existingUser.getId(), existingUser.getName(),
+                existingUser.getEmail(), existingUser.getAccessLevel().name());
     }
 
     @AfterEach
     void tearDown() throws NoSuchAlgorithmException {
-        repository = new AccountRepoImpl(new DatabasePostgres(new DatabaseConfig()));
-        repository.deleteHabit(existingUser.getEmail(), existingHabit.getTitle());
-        repository.deleteUser(existingUser.getEmail(), token);
+        repository.deleteHabit(existingUser.getId(), existingHabit.getTitle());
+        repository.deleteUser(existingUser.getId());
     }
-
 
     @Test
     @DisplayName("Should add a user to the collection and then remove them")
@@ -52,7 +57,7 @@ public class AccountRepositoryTest {
         // Given
         assertThat(repository.isUserExists(existingUser.getEmail())).isTrue();
         // When
-        repository.deleteUser(existingUser.getEmail(), "ExistingPass");
+        repository.deleteUser(existingUser.getId());
         // Then
         assertThat(repository.isUserExists(existingUser.getEmail())).isFalse();
     }
@@ -61,13 +66,13 @@ public class AccountRepositoryTest {
     @DisplayName("Should add a user and habit, then remove")
     void shouldAddThenRemoveUserAndHabit() {
         // Given
-        assertThat(repository.getHabitsOfUser(existingUser.getEmail())).isNotEmpty();
+        assertThat(repository.getHabitsOfUser(existingUser.getId())).isNotEmpty();
         // When
-        //habitService.deleteHabit(existingUser.getEmail(),  existingHabit.getTitle());
-        repository.deleteUser(existingUser.getEmail(), "ExistingPass");
+        //habitService.deleteHabit(existingUser.getId(), token, existingHabit.getTitle());
+        repository.deleteUser(existingUser.getId());
         // Then
-        assertThat(repository.getHabitsOfUser(existingUser.getEmail())).isEmpty();
-        assertThat(repository.isUserExists(existingUser.getEmail())).isFalse();
+        assertThat(repository.getHabitsOfUser(existingUser.getId())).isEmpty();
+        assertThat(repository.isUserExists(existingUser.getId())).isFalse();
     }
 
     @Test
@@ -77,7 +82,8 @@ public class AccountRepositoryTest {
         Habit changedHabit = existingHabit.clone();
         changedHabit.setTitle("NewTitle");
         // Then
-        assertThat(habitService.editHabit(existingUser.getEmail(), "ExistingToken", existingHabit, changedHabit)).isTrue();
+        assertThat(habitService.editHabit(existingUser.getId(), existingHabit.getTitle(),
+                changedHabit.getTitle(), changedHabit.getDescription(), changedHabit.getPeriod())).isTrue();
     }
 
     @Test
@@ -87,7 +93,8 @@ public class AccountRepositoryTest {
         Habit changedHabit = existingHabit.clone();
         changedHabit.setDescription("NewDescription");
         // Then
-        assertThat(habitService.editHabit(existingUser.getEmail(), "ExistingToken", existingHabit, changedHabit)).isTrue();
+        assertThat(habitService.editHabit(existingUser.getId(), existingHabit.getTitle(),
+                changedHabit.getTitle(), changedHabit.getDescription(), changedHabit.getPeriod())).isTrue();
     }
 
     @Test
@@ -97,23 +104,24 @@ public class AccountRepositoryTest {
         Habit changedHabit = existingHabit.clone();
         changedHabit.setPeriod(7);
         // Then
-        assertThat(habitService.editHabit(existingUser.getEmail(), "ExistingToken", existingHabit, changedHabit)).isTrue();
+        assertThat(habitService.editHabit(existingUser.getId(), existingHabit.getTitle(),
+                changedHabit.getTitle(), changedHabit.getDescription(), changedHabit.getPeriod())).isTrue();
     }
 
     @Test
     @DisplayName("Should mark existing habit as completed")
     void shouldMarkHabitInCollection() {
-        assertThat(habitService.markHabitAsCompleted(existingUser.getEmail(), "ExistingToken", existingHabit.getTitle())).isTrue();
-        assertThat(habitService.markHabitAsCompleted(user.getEmail(), "ExistingToken", habit.getTitle())).isFalse();
+        assertThat(habitService.markHabitAsCompleted(existingUser.getId(), existingHabit.getTitle())).isTrue();
+        assertThat(habitService.markHabitAsCompleted(user.getId(), habit.getTitle())).isFalse();
     }
 
     @Test
     @DisplayName("Should authorize the user or return null if credentials are wrong")
     void shouldAuthorizeUserAndThenReturnUserOrNull() {
-        AuthorizationResult correctAuthResult = userService.authorizeUser(existingUser.getEmail(), "ExistingPass");
-        AuthorizationResult wrongAuthResult = userService.authorizeUser(existingUser.getEmail(), "WrongPass");
-        assertThat(correctAuthResult.success()).isTrue();
-        assertThat(wrongAuthResult.success()).isFalse();
+        String correctAuthToken = userService.authorizeUser(existingUser.getEmail(), "ExistingPass");
+        String wrongAuthToken = userService.authorizeUser(existingUser.getEmail(), "WrongPass");
+        assertThat(correctAuthToken.isEmpty()).isFalse();
+        assertThat(wrongAuthToken.isEmpty()).isTrue();
     }
 
     @Test
@@ -122,22 +130,24 @@ public class AccountRepositoryTest {
         // Given
         String oldEmail = existingUser.getEmail();
         String newEmail = "changed@mail.ru";
-        assertThat(repository.isUserExists(existingUser.getEmail())).isTrue();
-        assertThat(repository.isUserExists(newEmail)).isFalse();
+
+        // Check initial state
+        assertThat(repository.isUserExists(existingUser.getEmail())).as("Check that actual email exists").isTrue();
+        assertThat(repository.isUserExists(newEmail)).isFalse().as("Check that new email does not exists yet");
+
+        // When: Try to change email
+        boolean isChanged = userService.editUserData(existingUser.getId(), newEmail, existingUser.getName());
+        assertThat(isChanged).as("Check result of email change").isTrue();
+        // Then: Check email change was successful
+        assertThat(repository.isUserExists(oldEmail)).as("Check that old email no longer exists").isFalse();
+        assertThat(repository.isUserExists(newEmail)).as("Check that new email exists").isTrue();
 
         // When
-        boolean isChanged = userService.editUserData(oldEmail, token, newEmail, existingUser.getName());
-        assertThat(isChanged).isTrue();
+        boolean isUnchanged = userService.editUserData(existingUser.getId(), oldEmail, existingUser.getName());
+        assertThat(isUnchanged).as("Check result of reverting to old email").isTrue();
         // Then
-        assertThat(repository.isUserExists(oldEmail)).isFalse();
-        assertThat(repository.isUserExists(newEmail)).isTrue();
-
-        // When
-        boolean isUnchanged = userService.editUserData(newEmail, token, oldEmail, existingUser.getName());
-        assertThat(isUnchanged).isTrue();
-        // Then
-        assertThat(repository.isUserExists(oldEmail)).isTrue();
-        assertThat(repository.isUserExists(newEmail)).isFalse();
+        assertThat(repository.isUserExists(oldEmail)).as("Check that old email exists again").isTrue();
+        assertThat(repository.isUserExists(newEmail)).as("Check that new email no longer exists").isFalse();
     }
 
     @Test
@@ -146,7 +156,7 @@ public class AccountRepositoryTest {
         // Given
         assertThat(repository.isUserExists(existingUser.getEmail())).isTrue();
         // When
-        repository.deleteUser(existingUser.getEmail(), "ExistingPass");
+        repository.deleteUser(existingUser.getId());
         // Then
         assertThat(repository.isUserExists(existingUser.getEmail())).isFalse();
         // When

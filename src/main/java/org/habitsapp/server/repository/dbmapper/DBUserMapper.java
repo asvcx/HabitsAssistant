@@ -11,7 +11,7 @@ import java.sql.Types;
 public class DBUserMapper implements ResultSetMapper<User> {
 
     public User mapToObj(ResultSet resultSet) throws SQLException {
-        int id = resultSet.getInt("user_id");
+        long id = resultSet.getLong("user_id");
         String name = resultSet.getString("user_name");
         String email = resultSet.getString("email");
         String password = resultSet.getString("password");
